@@ -1,0 +1,144 @@
+import tkinter as tk
+import config
+
+class MainFrame(tk.Frame):
+    def __init__(self, master):
+        self.master = master
+        tk.Frame.__init__(
+            self,
+            master=master,
+            bg='#EEEEEE'
+        )
+        self.key_label = self.create_key_label()
+        self.key_entry = self.create_key_entry()
+        self.phrase_label = self.create_phrase_label()
+        self.phrase_text = self.create_phrase_text()
+        self.save_button = self.create_save_button()
+        self.copy_button = self.create_copy_button()
+        self.configure_gui()
+
+    def create_key_label(self):
+        language_dict = config.get_language_dict()
+        label = tk.Label(
+            master=self,
+            text=language_dict['key'],
+            bg='#EEEEEE'
+        )
+        return label
+    
+    def create_key_entry(self):
+        entry = tk.Entry(
+            master=self,
+            relief=tk.RIDGE,
+            borderwidth=2,
+            highlightbackground='#EEEEEE'
+        )
+        return entry
+
+    def create_phrase_label(self):
+        language_dict = config.get_language_dict()
+        label = tk.Label(
+            master=self,
+            text=language_dict['phrase'],
+            bg='#EEEEEE'
+        )
+        return label
+
+    def create_phrase_text(self):
+        text = tk.Text(
+            master=self,
+            relief=tk.RIDGE,
+            borderwidth=2,
+            highlightbackground='#EEEEEE'
+        )   
+        return text
+
+    def create_save_button(self):
+        language_dict = config.get_language_dict()
+        button = tk.Button(
+            master=self,
+            command=self.save_entry,
+            text=language_dict['save'],
+            relief=tk.RIDGE,
+            borderwidth=2,
+            fg='BLACK',
+            bg='#DDDDDD',
+            padx=10,
+            pady=5
+        )
+        return button
+
+    def create_copy_button(self):
+        language_dict = config.get_language_dict()
+        button = tk.Button(
+            master=self,
+            command=self.copy_phrase,
+            text=language_dict['copy'],
+            relief=tk.RIDGE,
+            borderwidth=2,
+            fg='BLACK',
+            bg='#DDDDDD',
+            padx=10,
+            pady=5
+        )
+        return button
+    
+    def configure_gui(self):
+        self.columnconfigure(0, weight=1, pad=10)
+        self.columnconfigure(1, weight=100, pad=10)
+        self.rowconfigure(0, weight=0, pad=10)
+        self.rowconfigure(1, weight=100, pad=10)
+        self.master.rowconfigure(0, weight=1)
+        self.master.columnconfigure(0, weight=1)
+        self.key_label.grid(
+            row=0,
+            column=0,
+            pady=(10,0)
+        )
+        self.key_entry.grid(
+            row=0,
+            column=1,
+            sticky='ew',
+            padx=(0,100),
+            pady=(10,0)
+        )
+        self.phrase_label.grid(
+            row=1,
+            column=0
+        )
+        self.phrase_text.grid(
+            row=1,
+            column=1,
+            sticky='nsew',
+            padx=(0,20),
+            pady=(5,10)
+        )
+        self.save_button.grid(
+            row=2,
+            column=1,
+            sticky='w',
+            padx=(20,0),
+            pady=(0,15)
+        )
+        self.copy_button.grid(
+            row=2,
+            column=1,
+            sticky='e',
+            padx=(0,40),
+            pady=(0,15)
+        )
+        self.grid(
+            row=0,
+            column=0,
+            sticky='nsew'
+        )
+
+    def copy_phrase(self):
+        phrase = self.phrase_text.get('1.0', tk.END)
+        self.master.clipboard_clear()
+        self.master.clipboard_append(phrase)
+        #root.update() #Check if it does anything here
+        
+    def save_entry(self):
+        print(self.key_entry.get())
+        print(self.phrase_text.get('1.0', tk.END))

@@ -1,11 +1,51 @@
 import tkinter as tk
 
-def copy_phrase(root, text_phrase):
-    phrase = text_phrase.get('1.0', tk.END)
-    root.clipboard_clear()
-    root.clipboard_append(phrase)
-    #root.update() #Check what it does
+#Events that have at least one event handler configured
+HANDLED_EVENT_LIST = [
+    '<Configure>',
+]
 
-def save_entry(root, entry_keywords, text_phrase):
-    print(entry_keywords.get())
-    print(text_phrase.get('1.0', tk.END))
+#Events that are printed out to the console
+TRACKED_EVENT_LIST = [
+    '<Activate>',
+    '<Destroy>',
+    '<Map>',
+    '<ButtonPress>',
+    '<Enter>',
+    '<ButtonRelease>',
+    '<FocusIn>',
+    '<MouseWheel>',
+    '<FocusOut>',
+    '<Property>',
+    '<Configure>',
+    '<KeyPress>',
+    '<KeyRelease>',
+    '<Unmap>',
+    '<Create>',
+    '<Leave>',
+    '<Visibility>',
+    '<Deactivate>',
+]
+
+#Other Tkinter events that are not tracked
+UNTRACKED_EVENT_LIST = [
+
+    '<Motion>',
+    '<Expose>',
+    '<Colormap>',
+    '<MapRequest>',
+    '<CirculateRequest>',
+    '<ResizeRequest>',
+    '<ConfigureRequest>',
+    '<Gravity>',
+    '<Reparent>',
+    '<Circulate>',
+]
+
+def print_tracked_events(root):
+    for event in TRACKED_EVENT_LIST:
+        root.bind(event, print_event)
+
+def print_event(event):
+    print(event)
+    print(event.__dict__)
