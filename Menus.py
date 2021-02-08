@@ -7,12 +7,18 @@ class MenuBar(tk.Menu):
         master.option_add('tearOff', tk.FALSE)
         tk.Menu.__init__(self, master)
         self.option_menu = OptionMenu(self)
+        self.display_menu = DisplayMenu(self)
         self.add_menus()
         
     def add_menus(self):
+        language_dict = config.get_language_dict()
         self.add_cascade(
             menu=self.option_menu,
-            label='Options'
+            label=language_dict['options']
+        )
+        self.add_cascade(
+            menu=self.display_menu,
+            label=language_dict['display']
         )
         
 class OptionMenu(tk.Menu):
@@ -45,6 +51,22 @@ class OptionMenu(tk.Menu):
             label='Temp 4',
             command=self.temp
         )
+
+class DisplayMenu(tk.Menu):
+    def __init__(self, master):
+        tk.Menu.__init__(self, master)
+        self.add_commands()
+
+    def add_commands(self):
+        language_dict = config.get_language_dict()
+        self.add_command(
+            label=language_dict['show_buttons'],
+            command=config.show_buttons
+        )
+        self.add_command(
+            label=language_dict['hide_buttons'],
+            command = config.hide_buttons
+        )
     
 class LanguageMenu(tk.Menu):
     def __init__(self, master):
@@ -53,7 +75,6 @@ class LanguageMenu(tk.Menu):
 
     def add_commands(self):
         for language in config.get_languages():
-            print('adding language:', language)
             self.add_command(
                 label=language,
                 command=partial(config.set_language, language)

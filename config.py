@@ -37,6 +37,16 @@ def set_language(language):
 def get_language_dict():
     return LANGUAGE_DICT[config_dict['language']]
 
+def show_buttons():
+    config_dict['show_buttons'] = True
+    active_objects['root'].destroy()
+    active_objects['root'].redraw()
+
+def hide_buttons():
+    config_dict['show_buttons'] = False
+    active_objects['root'].destroy()
+    active_objects['root'].redraw()
+
 #Configurable settings - Only default size and language is set on first execution
 config_dict = load_config()
 
@@ -47,6 +57,7 @@ DEFAULT_CONFIG = {
     'initial_geometry':'',
     'current_geometry':'',
     'default_size':'600x250',
+    'show_buttons':True,
     'language':'Français',
 }
 
@@ -57,6 +68,10 @@ FRENCH_DICT = {
     'copy':'Copier',
     'save':'Ajouter',
     'language':'Langue',
+    'show_buttons':'Montrer les boutons',
+    'hide_buttons':'Cacher les boutons',
+    'options':'Options',
+    'display':'Affichage',
     'title':'Phrase/Clé'
 }
 ENGLISH_DICT = {
@@ -65,6 +80,10 @@ ENGLISH_DICT = {
     'copy':'Copy',
     'save':'Save',
     'language':'Language',
+    'show_buttons':'Show buttons',
+    'hide_buttons':'Hide buttons',
+    'options':'Options',
+    'display':'Display',
     'title':'Key/Phrase'
 }
 #Supported languages

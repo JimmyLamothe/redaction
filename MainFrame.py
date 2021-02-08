@@ -1,4 +1,6 @@
 import tkinter as tk
+from PIL import ImageTk, Image
+
 import config
 
 class MainFrame(tk.Frame):
@@ -13,8 +15,11 @@ class MainFrame(tk.Frame):
         self.key_entry = self.create_key_entry()
         self.phrase_label = self.create_phrase_label()
         self.phrase_text = self.create_phrase_text()
-        self.save_button = self.create_save_button()
-        self.copy_button = self.create_copy_button()
+        if config.config_dict['show_buttons']:
+            self.save_button = self.create_save_button()
+            self.copy_button = self.create_copy_button()
+            self.up_button = self.create_up_button()
+            self.down_button = self.create_down_button()
         self.configure_gui()
 
     def create_key_label(self):
@@ -82,6 +87,41 @@ class MainFrame(tk.Frame):
             pady=5
         )
         return button
+
+    def create_up_button(self):
+        icon = Image.open('icons/noun_chevron up_730241.png')
+        icon = icon.resize((20,20), Image.ANTIALIAS)
+        icon = ImageTk.PhotoImage(icon)
+        self.up_icon = icon
+        button = tk.Button(
+            master=self,
+            command=lambda x:x,
+            image=icon,
+            relief=tk.RIDGE,
+            borderwidth=2,
+            bg='#CCCCCC',
+            #height=20,
+            #width=20
+        )
+        return button
+
+    def create_down_button(self):
+        icon = Image.open('icons/noun_chevron down_730206.png')
+        icon = icon.resize((20,20), Image.ANTIALIAS)
+        icon = ImageTk.PhotoImage(icon)
+        self.down_icon = icon
+        button = tk.Button(
+            master=self,
+            command=lambda x:x,
+            image=icon,
+            relief=tk.RIDGE,
+            borderwidth=2,
+            bg='#CCCCCC',
+            #height=20,
+            #width=20
+        )
+        return button
+        
     
     def configure_gui(self):
         self.columnconfigure(0, weight=1, pad=10)
@@ -113,20 +153,35 @@ class MainFrame(tk.Frame):
             padx=(0,20),
             pady=(5,10)
         )
-        self.save_button.grid(
-            row=2,
-            column=1,
-            sticky='w',
-            padx=(20,0),
-            pady=(0,15)
-        )
-        self.copy_button.grid(
-            row=2,
-            column=1,
-            sticky='e',
-            padx=(0,40),
-            pady=(0,15)
-        )
+        if config.config_dict['show_buttons']:
+            self.save_button.grid(
+                row=2,
+                column=1,
+                sticky='w',
+                padx=(20,0),
+                pady=(0,15)
+            )
+            self.copy_button.grid(
+                row=2,
+                column=1,
+                sticky='e',
+                padx=(0,40),
+                pady=(0,15)
+            )
+            self.up_button.grid(
+                row=1,
+                column=2,
+                sticky='n',
+                padx=(0,15),
+                pady=(15,0)
+            )
+            self.down_button.grid(
+                row=1,
+                column=2,
+                sticky='s',
+                padx=(0,15),
+                pady=(0,15)
+            )
         self.grid(
             row=0,
             column=0,
