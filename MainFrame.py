@@ -1,5 +1,6 @@
 import tkinter as tk
 from PIL import ImageTk, Image
+import database as db
 
 import config
 
@@ -21,7 +22,8 @@ class MainFrame(tk.Frame):
             self.up_button = self.create_up_button()
             self.down_button = self.create_down_button()
         self.configure_gui()
-
+        self.bind_event_handlers()
+        
     def create_key_label(self):
         language_dict = config.get_language_dict()
         label = tk.Label(
@@ -36,7 +38,8 @@ class MainFrame(tk.Frame):
             master=self,
             relief=tk.RIDGE,
             borderwidth=2,
-            highlightbackground='#EEEEEE'
+            highlightbackground='#EEEEEE',
+            highlightcolor='#EEEEEE'
         )
         return entry
 
@@ -54,7 +57,8 @@ class MainFrame(tk.Frame):
             master=self,
             relief=tk.RIDGE,
             borderwidth=2,
-            highlightbackground='#EEEEEE'
+            highlightbackground='#EEEEEE',
+            highlightcolor='#EEEEEE' #No border on focus
         )   
         return text
 
@@ -95,7 +99,7 @@ class MainFrame(tk.Frame):
         self.up_icon = icon
         button = tk.Button(
             master=self,
-            command=lambda x:x,
+            command=db.previous_entry,
             image=icon,
             relief=tk.RIDGE,
             borderwidth=2,
@@ -112,7 +116,7 @@ class MainFrame(tk.Frame):
         self.down_icon = icon
         button = tk.Button(
             master=self,
-            command=lambda x:x,
+            command=db.next_entry,
             image=icon,
             relief=tk.RIDGE,
             borderwidth=2,
@@ -192,8 +196,22 @@ class MainFrame(tk.Frame):
         phrase = self.phrase_text.get('1.0', tk.END)
         self.master.clipboard_clear()
         self.master.clipboard_append(phrase)
-        #root.update() #Check if it does anything here
         
     def save_entry(self):
+        key_list = self.key_entry.get().split(' ')
         print(self.key_entry.get())
+        phrase = self.phrase_text.get('1.0', tk.END)
         print(self.phrase_text.get('1.0', tk.END))
+        db.save_entry(phrase, key_list)
+        print(db.key_df)
+        print(db.phrase_series)
+        
+    def handle_key_input(self, event):
+        print(event.char)
+
+    def handle_phrase_input(self, event):
+        print(event.char)
+        
+    def bind_event_handlers(self):
+        self.key_entry.bind('<KeyPress>', self.handle_key_input)
+        self.phrase_text.bind('<KeyPress>', self.handle_phrase_input)
