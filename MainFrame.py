@@ -1,7 +1,8 @@
 import tkinter as tk
 from PIL import ImageTk, Image
+from Key import Key
+from Phrase import Phrase
 import database as db
-
 import config
 
 class MainFrame(tk.Frame):
@@ -13,9 +14,9 @@ class MainFrame(tk.Frame):
             bg='#EEEEEE'
         )
         self.key_label = self.create_key_label()
-        self.key_entry = self.create_key_entry()
+        self.key = Key(self)
         self.phrase_label = self.create_phrase_label()
-        self.phrase_text = self.create_phrase_text()
+        self.phrase = Phrase(self)
         if config.config_dict['show_buttons']:
             self.save_button = self.create_save_button()
             self.copy_button = self.create_copy_button()
@@ -23,6 +24,8 @@ class MainFrame(tk.Frame):
             self.down_button = self.create_down_button()
         self.configure_gui()
         self.bind_event_handlers()
+        self.active_phrase_list = None
+        self.current_index = None
         
     def create_key_label(self):
         language_dict = config.get_language_dict()
@@ -33,16 +36,6 @@ class MainFrame(tk.Frame):
         )
         return label
     
-    def create_key_entry(self):
-        entry = tk.Entry(
-            master=self,
-            relief=tk.RIDGE,
-            borderwidth=2,
-            highlightbackground='#EEEEEE',
-            highlightcolor='#EEEEEE'
-        )
-        return entry
-
     def create_phrase_label(self):
         language_dict = config.get_language_dict()
         label = tk.Label(
@@ -51,16 +44,6 @@ class MainFrame(tk.Frame):
             bg='#EEEEEE'
         )
         return label
-
-    def create_phrase_text(self):
-        text = tk.Text(
-            master=self,
-            relief=tk.RIDGE,
-            borderwidth=2,
-            highlightbackground='#EEEEEE',
-            highlightcolor='#EEEEEE' #No border on focus
-        )   
-        return text
 
     def create_save_button(self):
         language_dict = config.get_language_dict()
@@ -99,7 +82,7 @@ class MainFrame(tk.Frame):
         self.up_icon = icon
         button = tk.Button(
             master=self,
-            command=db.previous_entry,
+            command=self.phrase.previous,
             image=icon,
             relief=tk.RIDGE,
             borderwidth=2,
@@ -116,7 +99,7 @@ class MainFrame(tk.Frame):
         self.down_icon = icon
         button = tk.Button(
             master=self,
-            command=db.next_entry,
+            command=self.phrase.next,
             image=icon,
             relief=tk.RIDGE,
             borderwidth=2,
@@ -139,7 +122,7 @@ class MainFrame(tk.Frame):
             column=0,
             pady=(10,0)
         )
-        self.key_entry.grid(
+        self.key.grid(
             row=0,
             column=1,
             sticky='ew',
@@ -150,7 +133,7 @@ class MainFrame(tk.Frame):
             row=1,
             column=0
         )
-        self.phrase_text.grid(
+        self.phrase.grid(
             row=1,
             column=1,
             sticky='nsew',
@@ -193,25 +176,33 @@ class MainFrame(tk.Frame):
         )
 
     def copy_phrase(self):
-        phrase = self.phrase_text.get('1.0', tk.END)
+        phrase = self.phrase.get_contents()
         self.master.clipboard_clear()
         self.master.clipboard_append(phrase)
         
     def save_entry(self):
-        key_list = self.key_entry.get().split(' ')
-        print(self.key_entry.get())
-        phrase = self.phrase_text.get('1.0', tk.END)
-        print(self.phrase_text.get('1.0', tk.END))
+        key_list = self.key.get_contents()
+        print(key_list)
+        phrase = self.phrase.get_contents()
+        print(phrase)
         db.save_entry(phrase, key_list)
         print(db.key_df)
         print(db.phrase_series)
         
     def handle_key_input(self, event):
-        print(event.char)
-
+        key_list = self.key.get_contents()
+        if self.phrase.create_list(key_list) == 'VALID KEY':
+            #print('Active phrase list:', self.phrase.active_list) #Testing code
+            self.phrase.clear()
+            self.phrase.display_current()
+            
     def handle_phrase_input(self, event):
         print(event.char)
         
     def bind_event_handlers(self):
-        self.key_entry.bind('<KeyPress>', self.handle_key_input)
-        self.phrase_text.bind('<KeyPress>', self.handle_phrase_input)
+        self.master.bind('<Control-c>', lambda event: self.copy_phrase())
+        self.master.bind('<Command-c>', lambda event: self.copy_phrase())
+        self.master.bind('<Control-s>', lambda event: self.save_entry())
+        self.master.bind('<Command-s>', lambda event: self.save_entry())
+        self.key.bind('<KeyRelease>', self.handle_key_input)
+        self.phrase.bind('<KeyRelease>', self.handle_phrase_input)

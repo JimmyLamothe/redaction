@@ -49,30 +49,12 @@ def add_phrase(phrase, phrase_series, index=None):
         index = get_index(phrase_series, default='')
     phrase_series.loc[index] = phrase
 
-def add_entry(phrase, key_list, phrase_series, key_df):
+def save_entry(phrase, key_list, key_df=key_df, phrase_series=phrase_series):
     index = add_keys(key_list, key_df)
     add_phrase(phrase, phrase_series, index=index)
 
-def get_phrase_list(key_list, key_df, phrase_series):
-    return phrase_series[key_df.loc[key_df[key_list].all(axis=1), :].index].values
-
-def save_entry(phrase, key_list):
-    print(phrase)
-    print(key_list)
-    add_entry(phrase, key_list, phrase_series, key_df)
-
-active_phrases = None
-
-current_index = None
-
-def next_entry():
+def get_phrase_list(key_list, key_df=key_df, phrase_series=phrase_series):
     try:
-        return active_phrases[current_index+1]
-    except IndexError or TypeError:
-        return None
-
-def previous_entry():
-    try:
-        return active_phrases[current_index-1]
-    except IndexError or TypeError:
+        return list(phrase_series[key_df.loc[key_df[key_list].all(axis=1), :].index].values)
+    except KeyError:
         return None

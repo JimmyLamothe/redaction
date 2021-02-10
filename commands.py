@@ -7,6 +7,12 @@ HANDLED_EVENT_LIST = [
 
 #Events that are printed out to the console
 TRACKED_EVENT_LIST = [
+    '<KeyPress>',
+    '<KeyRelease>',
+]
+
+#Other Tkinter events that can be tracked
+UNTRACKED_EVENT_LIST = [
     '<Activate>',
     '<Destroy>',
     '<Map>',
@@ -18,18 +24,16 @@ TRACKED_EVENT_LIST = [
     '<FocusOut>',
     '<Property>',
     '<Configure>',
-    '<KeyPress>',
-    '<KeyRelease>',
     '<Unmap>',
     '<Create>',
     '<Leave>',
     '<Visibility>',
     '<Deactivate>',
+
 ]
 
-#Other Tkinter events that are not tracked
-UNTRACKED_EVENT_LIST = [
-
+#Tkinter events that are never tracked
+IGNORED_EVENT_LIST = [
     '<Motion>',
     '<Expose>',
     '<Colormap>',

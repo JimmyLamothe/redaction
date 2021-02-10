@@ -29,7 +29,14 @@ class Root(tk.Tk):
 
     def save_geometry(self, event):
         config.get_config()['current_geometry'] = self.geometry()
-        
+
+    def test_keystrokes(self):
+        #self.bind('<Command-c>', lambda x:print('Command-c'))
+        #Use above as reference
+        pass
+    
     def bind_events(self):
-        #print_tracked_events(self) #Uncomment for testing
         self.bind('<Configure>', self.save_geometry)
+        #print_tracked_events(self) #Uncomment for testing
+        #self.test_keystrokes() #Uncomment for testing
+
