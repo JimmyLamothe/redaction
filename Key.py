@@ -13,8 +13,9 @@ class Key(tk.Entry):
             highlightbackground='#EEEEEE',
             highlightcolor='#EEEEEE',
         )
-        self.user_text='' #Text user has actually input
-        self.user_cursor=0
+        self.previous_display = ''
+        self.auto_text=''
+        self.auto_cursor=None
 
     def get_cursor(self):
         return self.index(tk.INSERT)
@@ -31,68 +32,78 @@ class Key(tk.Entry):
         key_list = [key for key in key_list if not key == '']
         return key_list
 
-    def get_user_key_list(self):
-        return self.get_key_list(self.user_text)
-
     def get_display_key_list(self):
         return self.get_key_list(self.get())
     
-    def insert_char(self, char):
-        self.print_attributes('insert_char')
-        print('before insert', self.user_text)
-        cursor = self.get_cursor()
-        start = self.user_text[:cursor]
-        end = self.user_text[cursor:]
-        self.user_text = start + char + end
-        print('after insert', self.user_text)
-        self.print_attributes
-
     def get_key_start(self, cursor):
-        start = max(self.user_text[:self.get_cursor()].rfind(' '), 0)
+        start = max(self.get()[:self.get_cursor()].rfind(' '), 0)
         return start
 
     def get_key_end(self, cursor):
-        next_space = self.user_text[self.get_cursor():].find(' ')
+        display_text = self.get()
+        next_space = display_text[self.get_cursor():].find(' ')
         if next_space == -1:
-            end = len(self.user_text)
+            end = len(display_text)
         else:
             end = next_space
         return end
+
+    def compare_states(self):
+        self.print_attributes('compare_states')
+        if self.auto_text == '':
+            return False
+        previous_cursor = self.get_cursor() - 1
+        current = self.get()
+        comparison = current[:previous_cursor] + current[previous_cursor+1:]
+        print('comparison', comparison)
+        print('previous_display', self.previous_display)
+        self.print_attributes()
+        return comparison == self.previous_display
+
         
     def autocomplete(self):
         self.print_attributes('autocomplete')
-        try:
-            partial_key = [item for item in self.get_user_key_list()
-                           if item not in self.get_display_key_list()][0]
-        except IndexError:
-            return
+        cursor = self.get_cursor()
+        start = self.get_key_start(cursor)
+        end = self.get_key_end(cursor)
+        partial_key = self.get()[start:end]    
         suggestion_list = db.valid_keys(partial_key)
         print('suggestion_list', suggestion_list)
         if suggestion_list:
             suggestion = suggestion_list[0] #TODO: Rank suggestions
             print('suggestion', suggestion)
-            cursor = self.get_cursor()
-            start = self.key_start(cursor)
-            end = self.key_end(cursor)
             self.delete(start, end)
             self.insert(start, suggestion)
-            self.current_display = self.get()
+            self.previous_display = self.get()
             self.set_cursor(cursor)
-        self.print_attributes
-            
+            self.auto_cursor = cursor
+            self.auto_text = suggestion[len(partial_key):]
+        self.print_attributes()
+
+    def reset_auto_vars(self):
+        self.auto_text = ''
+        self.auto_cursor = None
+        
+    def ignore_suggestion(self):
+        self.print_attributes('ignore_suggestion')
+        cursor = self.get_cursor()
+        self.delete(cursor, cursor + len(self.auto_text))
+        self.reset_auto_vars()
+        self.print_attributes()
+        
     def confirm_suggestion(self):
+        if not self.auto_text:
+            return
         self.print_attributes('confirm_suggestion')
-        display_text = self.get()
-        cursor_diff = len(display_text) - len(self.user_text)
-        self.user_text = display_text
-        set_cursor(get_cursor() + cursor_diff)
-        self.print_attributes
+        self.set_cursor(self.get_cursor() + len(self.auto_text))
+        self.reset_auto_vars()
+        self.print_attributes()
                    
     def print_attributes(self, func_string=None):
         if func_string:
             print('Inside:', func_string)
-        print('user_text', self.user_text)
-        print('user_cursor', self.user_cursor)
+        print('auto_text', self.auto_text)
+        print('auto_cursor', self.auto_cursor)
         print('display text', self.get())
         print('display cursor', self.get_cursor())
         if not func_string:

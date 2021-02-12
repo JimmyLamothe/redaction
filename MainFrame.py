@@ -192,17 +192,22 @@ class MainFrame(tk.Frame):
         print(db.key_df)
         print(db.phrase_series)
         
-    def handle_key_press(self, event):
-        if event.keysym == 'Tab':
-            self.key.confirm_suggestion()
-            
+    def handle_tab(self, event):
+        self.key.confirm_suggestion()
+        return('break')
+    
     def handle_key_release(self, event):
-        self.key.insert_char(event.char)
-        key_list = self.key.get_user_key_list()
-        self.phrase.display_phrase(key_list)
+        print(event.keysym)
+        if self.key.compare_states():
+            self.key.ignore_suggestion()
+        elif event.char == '':
+            return
+        key_list = self.key.get_display_key_list()
+        success = self.phrase.display_phrase(key_list)
         self.key.autocomplete()
         key_list = self.key.get_display_key_list()
-        self.phrase.display_phrase(key_list)
+        if not success:
+            self.phrase.display_phrase(key_list)
             
     def handle_phrase_input(self, event):
         print(event.char)
@@ -212,6 +217,6 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
-        self.key.bind('<KeyPress>', self.handle_key_press)
+        self.master.bind('<Tab>', self.handle_tab)
         self.key.bind('<KeyRelease>', self.handle_key_release)
         #self.phrase.bind('<KeyRelease>', self.handle_phrase_input)

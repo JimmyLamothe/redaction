@@ -60,3 +60,4 @@ class Phrase(tk.Text):
             #print('Active phrase list:', self.phrase.active_list) #Testing code
             self.clear()
             self.display_current()
+            return True
