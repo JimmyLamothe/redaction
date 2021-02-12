@@ -174,14 +174,17 @@ class MainFrame(tk.Frame):
             column=0,
             sticky='nsew'
         )
-
+        
+    def switch_focus(self):
+        print('Switch focus not implementend')
+        
     def copy_phrase(self):
         phrase = self.phrase.get_contents()
         self.master.clipboard_clear()
         self.master.clipboard_append(phrase)
         
     def save_entry(self):
-        key_list = self.key.get_contents()
+        key_list = self.key.get_display_key_list()
         print(key_list)
         phrase = self.phrase.get_contents()
         print(phrase)
@@ -189,12 +192,17 @@ class MainFrame(tk.Frame):
         print(db.key_df)
         print(db.phrase_series)
         
-    def handle_key_input(self, event):
-        key_list = self.key.get_contents()
-        if self.phrase.create_list(key_list) == 'VALID KEY':
-            #print('Active phrase list:', self.phrase.active_list) #Testing code
-            self.phrase.clear()
-            self.phrase.display_current()
+    def handle_key_press(self, event):
+        if event.keysym == 'Tab':
+            self.key.confirm_suggestion()
+            
+    def handle_key_release(self, event):
+        self.key.insert_char(event.char)
+        key_list = self.key.get_user_key_list()
+        self.phrase.display_phrase(key_list)
+        self.key.autocomplete()
+        key_list = self.key.get_display_key_list()
+        self.phrase.display_phrase(key_list)
             
     def handle_phrase_input(self, event):
         print(event.char)
@@ -204,5 +212,6 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
-        self.key.bind('<KeyRelease>', self.handle_key_input)
-        self.phrase.bind('<KeyRelease>', self.handle_phrase_input)
+        self.key.bind('<KeyPress>', self.handle_key_press)
+        self.key.bind('<KeyRelease>', self.handle_key_release)
+        #self.phrase.bind('<KeyRelease>', self.handle_phrase_input)

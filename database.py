@@ -55,6 +55,13 @@ def save_entry(phrase, key_list, key_df=key_df, phrase_series=phrase_series):
 
 def get_phrase_list(key_list, key_df=key_df, phrase_series=phrase_series):
     try:
-        return list(phrase_series[key_df.loc[key_df[key_list].all(axis=1), :].index].values)
+        mask = key_df.loc[key_df[key_list].all(axis=1), :].index #mask?
+        return list(phrase_series[mask].values)
     except KeyError:
         return None
+
+def valid_keys(partial_key, key_df=key_df):
+    if partial_key:
+        mask = key_df.columns.str.lower().str.startswith(partial_key.lower())
+        return list(key_df.columns[mask])
+    return []

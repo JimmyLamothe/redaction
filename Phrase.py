@@ -19,7 +19,7 @@ class Phrase(tk.Text):
 
     def create_list(self, key_list):
         if key_list and not key_list == ['']:
-            print('key list', key_list)
+            #print('key list', key_list)
             phrase_list = db.get_phrase_list(key_list)
             if phrase_list:
                 self.active_list = phrase_list
@@ -55,4 +55,8 @@ class Phrase(tk.Text):
             self.clear()
             self.display_current()
             
-    
+    def display_phrase(self, key_list):
+        if self.create_list(key_list) == 'VALID KEY':
+            #print('Active phrase list:', self.phrase.active_list) #Testing code
+            self.clear()
+            self.display_current()
