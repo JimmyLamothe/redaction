@@ -192,10 +192,14 @@ class MainFrame(tk.Frame):
         print(db.key_df)
         print(db.phrase_series)
         
-    def handle_tab(self, event):
+    def handle_key_tab(self, event):
         if self.key.confirm_suggestion():
             return('break')
 
+    def handle_phrase_tab(self, event):
+        self.key.focus()
+        return('break')
+        
     def handle_key_release(self, event):
         delete_keysyms = ['Delete','KP_Delete','BackSpace']
         print(event.keysym)
@@ -221,6 +225,7 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
-        self.master.bind('<Tab>', self.handle_tab)
+        self.key.bind('<Tab>', self.handle_key_tab)
         self.key.bind('<KeyRelease>', self.handle_key_release)
+        self.phrase.bind('<Tab>', self.handle_phrase_tab)
         #self.phrase.bind('<KeyRelease>', self.handle_phrase_input)
