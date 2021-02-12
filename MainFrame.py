@@ -193,14 +193,18 @@ class MainFrame(tk.Frame):
         print(db.phrase_series)
         
     def handle_tab(self, event):
-        self.key.confirm_suggestion()
-        return('break')
-    
+        if self.key.confirm_suggestion():
+            return('break')
+
     def handle_key_release(self, event):
+        delete_keysyms = ['Delete','KP_Delete','BackSpace']
         print(event.keysym)
         if self.key.compare_states():
             self.key.ignore_suggestion()
         elif event.char == '':
+            return
+        elif event.keysym in delete_keysyms:
+            self.key.ignore_suggestion()
             return
         key_list = self.key.get_display_key_list()
         success = self.phrase.display_phrase(key_list)

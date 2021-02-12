@@ -93,11 +93,13 @@ class Key(tk.Entry):
         
     def confirm_suggestion(self):
         if not self.auto_text:
-            return
+            return False
         self.print_attributes('confirm_suggestion')
         self.set_cursor(self.get_cursor() + len(self.auto_text))
+        self.insert(self.get_cursor(), ' ') 
         self.reset_auto_vars()
         self.print_attributes()
+        return True
                    
     def print_attributes(self, func_string=None):
         if func_string:
