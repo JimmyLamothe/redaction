@@ -7,6 +7,7 @@ from commands import print_tracked_events
 class Root(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
+        self.option_add('*Font', 'TkDefaultFont')
         config.active_objects['root'] = self
         self.main_frame = MainFrame(self)
         self.menu_bar = MenuBar(self)

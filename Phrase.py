@@ -15,7 +15,7 @@ class Phrase(tk.Text):
         )   
         
     def get_contents(self):
-        return self.get('1.0', tk.END)[:-1] #Remove end line
+        return self.get('1.0', tk.END)[:-1] #Remove carriage return
 
     def create_list(self, key_list):
         if key_list and not key_list == ['']:
@@ -29,6 +29,22 @@ class Phrase(tk.Text):
 
     def clear(self):
         self.delete('1.0', tk.END)
+
+    def get_cursor(self):
+        return self.index(tk.INSERT)
+        
+    def set_cursor(self, line, column):
+        self.mark_set(tk.INSERT, f'{line}.{column}')
+        
+    def search_forwards(self, pattern):
+        return self.search(pattern, tk.INSERT, forwards=True, stopindex=tk.END)
+
+    def search_backwards(self, pattern):
+        return self.search(pattern, tk.INSERT, backwards=True, stopindex='1.0')
+
+    def delete_word(self):
+        print('deleting')
+        self.delete(self.search_backwards(' '), tk.INSERT)
     
     def display_current(self):
         self.insert('1.0', self.active_list[self.current_index])

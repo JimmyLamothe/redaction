@@ -191,6 +191,8 @@ class MainFrame(tk.Frame):
         db.save_entry(phrase, key_list)
         print(db.key_df)
         print(db.phrase_series)
+        self.phrase.clear()
+        self.key.clear()
         
     def handle_key_tab(self, event):
         if self.key.confirm_suggestion():
@@ -216,7 +218,17 @@ class MainFrame(tk.Frame):
         key_list = self.key.get_display_key_list()
         if not success:
             self.phrase.display_phrase(key_list)
-            
+
+    def handle_key_backspace(self, event):
+        if event.state in [1,4,8,16]:
+            self.key.delete_word()
+            return 'break'
+        
+    def handle_phrase_backspace(self, event):
+        if event.state in [1,4,8,16]:
+            self.phrase.delete_word()
+            return 'break'
+    
     def handle_phrase_input(self, event):
         print(event.char)
         
@@ -226,6 +238,8 @@ class MainFrame(tk.Frame):
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
         self.key.bind('<Tab>', self.handle_key_tab)
+        self.key.bind('<BackSpace>', self.handle_key_backspace)
         self.key.bind('<KeyRelease>', self.handle_key_release)
         self.phrase.bind('<Tab>', self.handle_phrase_tab)
+        self.phrase.bind('<BackSpace>', self.handle_phrase_backspace)
         #self.phrase.bind('<KeyRelease>', self.handle_phrase_input)

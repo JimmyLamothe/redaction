@@ -23,9 +23,16 @@ class Key(tk.Entry):
     def set_cursor(self, index):
         self.icursor(index)
     
-    def clear(self, index):
+    def clear(self):
         self.delete(0, len(self.get()))
 
+    def delete_word(self):
+        print('deleting')
+        end = self.get_cursor()
+        display = self.get()
+        start = max(display.rfind(' '), 0)
+        self.delete(start, end)
+        
     @staticmethod
     def get_key_list(text):
         key_list = text.split(' ')
