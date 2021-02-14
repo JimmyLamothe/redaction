@@ -43,7 +43,7 @@ class Key(tk.Entry):
         return self.get_key_list(self.get())
     
     def get_key_start(self, cursor):
-        start = max(self.get()[:self.get_cursor()].rfind(' '), 0)
+        start = max(self.get()[:self.get_cursor()].rfind(' ') + 1, 0)
         return start
 
     def get_key_end(self, cursor):
@@ -66,14 +66,14 @@ class Key(tk.Entry):
         print('previous_display', self.previous_display)
         self.print_attributes()
         return comparison == self.previous_display
-
         
     def autocomplete(self):
         self.print_attributes('autocomplete')
         cursor = self.get_cursor()
         start = self.get_key_start(cursor)
         end = self.get_key_end(cursor)
-        partial_key = self.get()[start:end]    
+        partial_key = self.get()[start:end]
+        print(partial_key)
         suggestion_list = db.valid_keys(partial_key)
         print('suggestion_list', suggestion_list)
         if suggestion_list:

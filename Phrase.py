@@ -40,11 +40,20 @@ class Phrase(tk.Text):
         return self.search(pattern, tk.INSERT, forwards=True, stopindex=tk.END)
 
     def search_backwards(self, pattern):
-        return self.search(pattern, tk.INSERT, backwards=True, stopindex='1.0')
+        index = self.search(pattern, tk.INSERT, backwards=True, stopindex='1.0')
+        line = self.get_cursor()[0]
+        if (not index) or (index[0] != line[0]):
+            index = f'{line}.0'
+        return index
 
     def delete_word(self):
-        print('deleting')
-        self.delete(self.search_backwards(' '), tk.INSERT)
+        start = self.search_backwards(' ')
+        end = tk.INSERT
+        if start == self.index(tk.INSERT):
+            line = int(self.get_cursor()[0])
+            if not line == 0:
+                start = f'{line-1}.end'
+        self.delete(start, end)
     
     def display_current(self):
         self.insert('1.0', self.active_list[self.current_index])
