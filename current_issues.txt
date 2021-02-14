@@ -1,0 +1,4 @@
+TODO: Autocomplete must check cursor/text is in the same place before insert
+      in case user types too fast
+
+TODO: Convert database to class

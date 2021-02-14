@@ -3,9 +3,8 @@ import numpy as np
 
 def load_key_dataframe():
     try:
-        with open('database/key.csv', 'r') as key_file:
-            key_df = pd.read_csv(key_file, delimiter=',')
-            print('Loading saved key dataframe')
+        key_df = pd.read_pickle('database/key.pickle')
+        print('Loading saved key dataframe')
     except FileNotFoundError:
         print('Creating new key dataframe')
         key_df = pd.DataFrame.from_dict({})
@@ -13,9 +12,8 @@ def load_key_dataframe():
 
 def load_phrase_series():
     try:
-        with open('database/phrase.csv', 'r') as phrase_file:
-            phrase_series = pd.read_csv(phrase_file, delimiter=',')
-            print('Loading saved phrase series')
+        phrase_series = pd.read_pickle('database/phrase.pickle')
+        print('Loading saved phrase series')
     except FileNotFoundError:
         print('Creating new phrase series')
         phrase_series = pd.Series([], dtype='object')
@@ -24,6 +22,15 @@ def load_phrase_series():
 key_df = load_key_dataframe()
 phrase_series = load_phrase_series()
 
+def save():
+    key_df.to_pickle('database/key.pickle')
+    phrase_series.to_pickle('database/phrase.pickle')
+
+def reset(): #Temp function / to be deleted
+    import os
+    os.remove('database/phrase.pickle')
+    os.remove('database/key.pickle')
+    
 def add_column_if_missing(name, df):
     if not name in df.columns:
         df[name] = False
@@ -52,10 +59,12 @@ def add_phrase(phrase, phrase_series, index=None):
 def save_entry(phrase, key_list, key_df=key_df, phrase_series=phrase_series):
     index = add_keys(key_list, key_df)
     add_phrase(phrase, phrase_series, index=index)
-
+    save()
+    
 def get_phrase_list(key_list, key_df=key_df, phrase_series=phrase_series):
     try:
         mask = key_df.loc[key_df[key_list].all(axis=1), :].index #mask?
+        print(mask)
         return list(phrase_series[mask].values)
     except KeyError:
         return None
