@@ -2,8 +2,11 @@ import tkinter as tk
 from PIL import ImageTk, Image
 from Key import Key
 from Phrase import Phrase
-import database as db
 import config
+if config.config_dict['db'] == 'def':
+    import database as db
+else:
+    import database_alt as db
 
 class MainFrame(tk.Frame):
     def __init__(self, master):
@@ -190,7 +193,7 @@ class MainFrame(tk.Frame):
         print(phrase)
         db.save_entry(phrase, key_list)
         print(db.key_df)
-        print(db.phrase_series)
+        #print(db.phrase_series)
         self.phrase.clear()
         self.key.clear()
         

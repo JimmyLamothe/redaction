@@ -1,3 +1,4 @@
+import random
 import pandas as pd
 import numpy as np
 
@@ -26,6 +27,12 @@ def save():
     key_df.to_pickle('database/key.pickle')
     phrase_series.to_pickle('database/phrase.pickle')
 
+def backup():
+    shutil.copy2('database/key.pickle', 'database/key_bkup.pickle')
+
+def restore():
+    shutil.copy2('database/key_bkup.pickle', 'database/key.pickle')
+    
 def reset(): #Temp function / to be deleted
     import os
     os.remove('database/phrase.pickle')
@@ -74,3 +81,27 @@ def valid_keys(partial_key, key_df=key_df):
         mask = key_df.columns.str.lower().str.startswith(partial_key.lower())
         return list(key_df.columns[mask])
     return []
+
+def get_words(word_list, minimum, maximum):
+    total = random.randint(minimum, maximum)
+    result = []
+    for i in range(total):
+        result.append(random.choice(word_list))
+    return result
+
+def generate_key_list(word_list):
+    return get_words(word_list, 1, 3)
+
+def generate_phrase(word_list):
+    return get_words(word_list, 8, 30)
+
+def generate_test_db(language='fr', size=500):
+    if language == 'fr':
+        with open('language/mots.txt', 'r') as f:
+            word_list = f.read().splitlines()
+    elif language == 'en':
+        with open('/usr/share/dict/words', 'r') as f:
+            word_list = f.read().splitlines()
+    for i in range(size):
+        print(f'Generating entry {i+1} of {size}')
+        save_entry(generate_key_list(word_list), generate_phrase(word_list))

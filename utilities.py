@@ -1,50 +1,40 @@
-import os, datetime
+import shutil, os
 
-#Backup procedure - Old code - Rewrite - include file number limit
-def backup(filepath):                                                             
-    def get_root(filepath):
-        index = filepath.rfind('/')
-        root = filepath[0:index + 1]
-        return root
-    def get_filename(filepath):
-        index = filepath.rfind('/')
-        dot = filepath.rfind('.')
-        filename = filepath[index + 1:dot]
-        return filename
-    def get_extension(filepath):
-        dot = filepath.rfind('.')
-        extension = filepath[dot:]
-        return extension
-    root = get_root(filepath)
-    filename = get_filename(filepath)
-    extension = get_extension(filepath)
-    new_root = root + 'bkup/'
-    def get_date():
-        time = datetime.datetime.today()
-        year = str(time.year)
-        def add_zero(string):
-            if len(string) == 1:
-                return '0' + string
-            elif len(string) == 2:
-                return string
-            else:
-                raise ValueError
-        month = add_zero(str(time.month))
-        day = add_zero(str(time.day))
-        hour = add_zero(str(time.hour))
-        minute = add_zero(str(time.minute))
-        return year + month + day + hour + minute
-    new_filename = filename + '_' + get_date()
-    new_filepath = new_root + new_filename + extension
-    def write_file():
-        with open(filepath, 'r') as source:
-            with open (new_filepath, 'w') as target:
-                target.write(source.read())
-    try:
-        write_file()
-    except FileNotFoundError:
-        try:
-            os.mkdir(new_root)
-            write_file()
-        except FileExistsError:
-            return
+def backup_db():
+    import config #Here to preserve proper atexit registration order
+    if config.config_dict['db'] == 'def':
+        shutil.copy2('database/key.pickle', 'database/key_bkup.pickle')
+        shutil.copy2('database/phrase.pickle', 'database/phrase_bkup.pickle')
+    else:
+        shutil.copy2('database/alt_key.pickle', 'database/alt_key_bkup.pickle')
+
+def restore_db():
+    import config #Here to preserve proper atexit registration order
+    if config.config_dict['db'] == 'def':
+        shutil.copy2('database/key_bkup.pickle', 'database/key.pickle')
+        shutil.copy2('database/phrase_bkup.pickle', 'database/phrase.pickle')
+        os.remove('database/key_bkup.pickle')
+        os.remove('database/phrase_bkup.pickle')
+    else:
+        shutil.copy2('database/alt_key_bkup.pickle', 'database/alt_key.pickle')
+        os.remove('database/alt_key_bkup.pickle')
+def backup_config():
+    shutil.copy2('config/config.json', 'config/config_bkup.json')
+
+def restore_config():
+    shutil.copy2('config/config_bkup.json', 'config/config.json')
+    os.remove('config/config_bkup.json')
+    
+def delete_config():
+    os.remove('config/config.json')
+
+def delete_db():
+    import config
+    if config.config_dict['db'] == 'def':
+        print('removing key.pickle and phrase.pickle')
+        os.remove('database/key.pickle')
+        os.remove('database/phrase.pickle')
+        print(os.listdir('database'))
+    else:
+        print('removing alt_key.pickle')
+        os.remove('database/alt_key.pickle')

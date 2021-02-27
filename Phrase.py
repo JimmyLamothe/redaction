@@ -1,5 +1,9 @@
 import tkinter as tk
-import database as db
+import config
+if config.config_dict['db'] == 'def':
+    import database as db
+else:
+    import database_alt as db
 
 class Phrase(tk.Text):
     def __init__(self, master):
