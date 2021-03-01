@@ -1,5 +1,6 @@
 import argparse
 import atexit
+import cProfile
 import tkinter as tk
 from utilities import backup_db, restore_db, backup_config, restore_config
 from utilities import delete_db, delete_config
@@ -59,10 +60,19 @@ try:
 except FileNotFoundError:
     restore_db_on_exit = False
     delete_db_on_exit = True
+if args.db == 'def':
+    import database as db
+else:
+    import database_alt as db
 
-import database as db
-    
+pr=cProfile.Profile()
+pr.enable()
+
 db.generate_test_db(language=args.language, size=args.size)
+
+pr.disable()
+
+pr.print_stats(sort='cumtime')
 
 from Root import Root
 

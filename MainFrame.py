@@ -191,7 +191,7 @@ class MainFrame(tk.Frame):
         print(key_list)
         phrase = self.phrase.get_contents()
         print(phrase)
-        db.save_entry(phrase, key_list)
+        db.save_entry(key_list, phrase)
         print(db.key_df)
         #print(db.phrase_series)
         self.phrase.clear()

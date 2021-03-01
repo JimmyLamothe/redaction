@@ -1,3 +1,4 @@
+import random
 import pandas as pd
 import numpy as np
 
@@ -32,38 +33,65 @@ def add_column_if_missing(name, df):
     if not name in df.columns:
         df[name] = False
 
-def initialize_key_df(phrase, key_list):
+def initialize_key_df(key_list, phrase):
     print('Initializing DataFrame')
     row_data = []
     for i in range(len(key_list)):
         row_data.append(True)
+    global key_df
     key_df = pd.DataFrame.from_dict({phrase:row_data},
                                     orient='index',
                                     columns=key_list)
     return key_df
 
-def save_entry(phrase, key_list, key_df=key_df):
+def save_entry(key_list, phrase, key_df=key_df):
     if key_df is None:
-        key_df = initialize_key_df(phrase, key_list)
-        save_entry(phrase, key_list, key_df=key_df)
+        key_df = initialize_key_df(key_list, phrase)
+        save_entry(key_list, phrase, key_df=key_df)
     else:
         print('Found DataFrame')
         key_df.loc[phrase] = False #Initialize row with all False 
         for key in key_list:
             add_column_if_missing(key, key_df) #Add missing new keys 
         key_df.loc[phrase, key_list] = True #Set keys to True
-        print(key_df)
-    save(key_df)
+        save(key_df)
     
-def get_phrase_list(key_list, key_df=key_df):
+def get_phrase_list(key_list):
     try:
         index = key_df.loc[key_df[key_list].all(axis=1), :].index
         return list(index.values)
     except KeyError:
         return None
 
-def valid_keys(partial_key, key_df=key_df):
+def valid_keys(partial_key):
     if partial_key:
         mask = key_df.columns.str.lower().str.startswith(partial_key.lower())
         return list(key_df.columns[mask])
     return []
+
+def get_words(word_list, minimum, maximum):
+    total = random.randint(minimum, maximum)
+    result = []
+    for i in range(total):
+        result.append(random.choice(word_list))
+    return result
+
+def generate_key_list(word_list):
+    return get_words(word_list, 1, 3)
+
+def generate_phrase(word_list):
+    return ' '.join(get_words(word_list, 8, 30))
+
+def generate_test_db(language='fr', size=500):
+    if language == 'fr':
+        with open('language/mots.txt', 'r') as f:
+            word_list = f.read().splitlines()
+    elif language == 'en':
+        with open('/usr/share/dict/words', 'r') as f:
+            word_list = f.read().splitlines()
+    for i in range(size):
+        print(f'Generating entry {i+1} of {size}')
+        save_entry(generate_key_list(word_list),
+                   generate_phrase(word_list),
+                   key_df=key_df)
+    print(key_df)

@@ -63,7 +63,7 @@ def add_phrase(phrase, phrase_series, index=None):
         index = get_index(phrase_series, default='')
     phrase_series.loc[index] = phrase
 
-def save_entry(phrase, key_list, key_df=key_df, phrase_series=phrase_series):
+def save_entry(key_list, phrase, key_df=key_df, phrase_series=phrase_series):
     index = add_keys(key_list, key_df)
     add_phrase(phrase, phrase_series, index=index)
     save()
@@ -105,3 +105,4 @@ def generate_test_db(language='fr', size=500):
     for i in range(size):
         print(f'Generating entry {i+1} of {size}')
         save_entry(generate_key_list(word_list), generate_phrase(word_list))
+    print(key_df)

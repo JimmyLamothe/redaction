@@ -1,9 +1,12 @@
 import tkinter as tk
 import config
 if config.config_dict['db'] == 'def':
+    print('Phrase.py loading def db')
     import database as db
 else:
+    print('Phrase.py loading alt db')
     import database_alt as db
+    print(db.key_df)
 
 class Phrase(tk.Text):
     def __init__(self, master):
@@ -23,7 +26,7 @@ class Phrase(tk.Text):
 
     def create_list(self, key_list):
         if key_list and not key_list == ['']:
-            #print('key list', key_list)
+            print('key list', key_list)
             phrase_list = db.get_phrase_list(key_list)
             if phrase_list:
                 self.active_list = phrase_list
