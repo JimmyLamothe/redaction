@@ -1,6 +1,13 @@
-TODO: Tests: Time difference between database and alt_database
+TODO: Tests: Check if key_release or key_press events are better to catch.
 
-TODO: Alt_database: Fix repeated columns on initial creation
+TODO: Refactoring: Rename key_df since it now includes phrases
+
+TODO: Bug: Saving empty phrase should be impossible
+
+TODO: Bug: Autocomplete - previous_cursor in key.compare_states won't work if user
+      	   has clicked elsewhere in the entry.
+
+TODO: Bug: Alt_database - Fix repeated columns on initial creation
 
 TODO: Tests: Time difference between Pandas and SQLite
 
@@ -12,3 +19,8 @@ TODO: Structure: Convert database to class?
 TODO: Feature: Add translation mode
 
 TODO: Feature: Use Phrase space as menu hints
+
+TODO: Feature: Undo and Redo
+
+DONE: Tests: Time difference between database and alt_database
+      Result: Alt database was 100 times quicker and is now the default database.

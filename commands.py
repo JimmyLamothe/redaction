@@ -1,14 +1,27 @@
+""" Testing module for Tkinter commands
+
+Constants:
+    HANDLED_EVENT_LIST
+    TRACKED_EVENT_LIST
+    UNTRACKED_EVENT_LIST
+    IGNORED_EVENT_LIST
+
+Functions:
+    print_tracked_events(Root)
+    print_event(tkinter.Event)
+"""
+
 import tkinter as tk
 
 #Events that have at least one event handler configured
 HANDLED_EVENT_LIST = [
     '<Configure>',
+    '<KeyPress>',
+    '<KeyRelease>',
 ]
 
 #Events that are printed out to the console
 TRACKED_EVENT_LIST = [
-    '<KeyPress>',
-    '<KeyRelease>',
 ]
 
 #Other Tkinter events that can be tracked
@@ -47,9 +60,11 @@ IGNORED_EVENT_LIST = [
 ]
 
 def print_tracked_events(root):
+    """ Prints tracked event info when triggered | None -> None """
     for event in TRACKED_EVENT_LIST:
         root.bind(event, print_event)
 
 def print_event(event):
+    """ Print even info | None -> None """
     print(event)
     print(event.__dict__)

@@ -1,9 +1,15 @@
+""" Database speedtests
+
+This script is meant to test different database implementations for maximum speed.
+"""
+
 import argparse
 import atexit
 import cProfile
 import tkinter as tk
 from utilities import backup_db, restore_db, backup_config, restore_config
 from utilities import delete_db, delete_config
+
 @atexit.register
 def cleanup(): #Must be registered before atexit functions in config module
     if restore_config_on_exit:
@@ -24,6 +30,7 @@ def cleanup(): #Must be registered before atexit functions in config module
             delete_db()
         except FileNotFoundError:
             pass
+
 import config
 
 config.config_dict['test_mode'] = True
@@ -37,6 +44,7 @@ except FileNotFoundError:
     delete_config_on_exit = True
 
 parser = argparse.ArgumentParser()
+
 parser.add_argument('db',
                     help='Use "def" for default database or "alt" for comparison',
                     choices=['def', 'alt'])
@@ -47,6 +55,7 @@ parser.add_argument('size',
 parser.add_argument('language',
                     help='Use "fr" for French and "en" for English',
                     choices=['en', 'fr'])
+
 args = parser.parse_args()
 config.config_dict['db'] = args.db
 
@@ -60,10 +69,11 @@ try:
 except FileNotFoundError:
     restore_db_on_exit = False
     delete_db_on_exit = True
-if args.db == 'def':
-    import database as db
-else:
+
+if args.db == 'alt':
     import database_alt as db
+else:
+    import database as db
 
 pr=cProfile.Profile()
 pr.enable()
