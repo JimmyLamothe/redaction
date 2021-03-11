@@ -6,13 +6,22 @@ TODO: Bug: Saving empty phrase should be impossible
 
 TODO: Bug: Autocomplete - previous_cursor in key.compare_states won't work if user
       	   has clicked elsewhere in the entry.
+      Idea: Track mouse clicks
+
+TODO: Improve: Autocomplete needs more work - ideas here
+      Idea: Autocomplete checks if cursor is at end of last character before running.
+            Also runs if user continued typing at same cursor as previous
+	    autocomplete
+
+TODO: Feature: Autocomplete should be in gray like Google does
+
+TODO: Bug: When user types too fast, autocomplete can't keep up
+      Idea: Set flag when user types - check flag before inserting text
 
 TODO: Bug: Alt_database - Fix repeated columns on initial creation
 
 TODO: Tests: Time difference between Pandas and SQLite
 
-TODO: Bug: When user types too fast, autocomplete can't keep up
-      Idea: Set flag when user types - check flag before inserting text
 
 TODO: Structure: Convert database to class?
 
@@ -21,6 +30,7 @@ TODO: Feature: Add translation mode
 TODO: Feature: Use Phrase space as menu hints
 
 TODO: Feature: Undo and Redo
+      Idea: Save states - figure out which variables need to be tracked
 
 DONE: Tests: Time difference between database and alt_database
       Result: Alt database was 100 times quicker and is now the default database.
