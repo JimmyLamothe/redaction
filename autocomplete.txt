@@ -3,23 +3,31 @@ Functionality:
 	- Autocomplete is only called when character is typed after end of last word
 	- Changing the cursor position deletes the suggestion
 
-Tracked:
-	- current_text
-	- current_cursor
-	- cursor_at_end - BOOL
-	- suggestion_text
-	- suggestion_active - BOOL (cannot be True if not cursor_at_end)
+Attributes:
+	- current_text = str
+	- current_cursor = int
+	- suggestion_text = str
+	- suggestion_active = bool
 
-Concept:
-	If not suggestion_active, break
-	If suggestion active:
-   	    On click, check cursor position:
-	       - If cursor moved, call ignore_suggestion, break
-
-	    On key input, check if char received:
-	       - If not char received, check if cursor moved
-	       - If cursor moved, call ignore_suggestion, break
+Methods:
+	- cursor_at_end -> bool
+	- cursor_moved -> str or bool
+	- ignore_suggestion
+	- confirm_suggestion
+	- get_difference -> str
 	
+Concept:
+	If not suggestion_active:
+	   If char received and cursor_at_end, call autocomplete
+	If suggestion active:
+   	    On click, call cursor_moved:
+	       - If cursor did not move, pass
+	       - If cursor moved left, call ignore_suggestion
+	       - If cursor moved right, call confirm_suggestion up to cursor
+	    On key input, check if char received:
+	       - If not char received, call cursor moved
+	       - If cursor moved left, call ignore_suggestion, break
+	       - If cursor moved right, call confirm_suggestion up to cursor
 	    On char_received, if suggestion_active, call get_difference:
 	       - Gets display text
 	       - Removes last characters = len(suggestion_text)

@@ -18,10 +18,12 @@ HANDLED_EVENT_LIST = [
     '<Configure>',
     '<KeyPress>',
     '<KeyRelease>',
+    '<ButtonRelease>',
 ]
 
 #Events that are printed out to the console
 TRACKED_EVENT_LIST = [
+    '<KeyPress>',
 ]
 
 #Other Tkinter events that can be tracked
@@ -31,7 +33,6 @@ UNTRACKED_EVENT_LIST = [
     '<Map>',
     '<ButtonPress>',
     '<Enter>',
-    '<ButtonRelease>',
     '<FocusIn>',
     '<MouseWheel>',
     '<FocusOut>',

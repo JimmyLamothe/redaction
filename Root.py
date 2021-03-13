@@ -63,4 +63,3 @@ class Root(tk.Tk):
         self.bind('<Configure>', self.save_geometry)
         #print_tracked_events(self) #Uncomment for testing
         #self.test_keystrokes() #Uncomment for testing
-

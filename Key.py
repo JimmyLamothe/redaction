@@ -23,9 +23,16 @@ class Key(tk.Entry):
     Args:
         master (tk.Frame): MainFrame object inheriting from tk.Frame 
 
+    Attributes:
+        current_text
+        current_cursor
+        suggestion_text
+        suggestion_active
+
     Methods:
         __init__(MainFrame)
         get_cursor()
+        cursor_at_end(optional:int, optional:str)
         set_cursor(int)
         clear()
         delete_word()
@@ -35,7 +42,6 @@ class Key(tk.Entry):
         get_key_end(int)
         compare_states()
         autocomplete()
-        reset_auto_vars()
         ignore_suggestion()
         confirm_suggestion()
         print_attributes(optional:str)
@@ -51,14 +57,41 @@ class Key(tk.Entry):
             highlightbackground='#EEEEEE',
             highlightcolor='#EEEEEE',
         )
-        self.previous_display = '' # Display text before most recent char input
-        self.auto_text='' #Current autocomplete text
-        self.auto_cursor=None #Current autocomplete cursor position
+        """
+        NOTE: Current text and cursor do not include the input currently
+              being processed. This is why they can differ from the display
+              text and display cursor accessed by other methods.
+        """
+        self.current_text = '' #Actual text input by user
+        self.current_cursor = None #Current tracked cursor position
+        self.suggestion_text = '' #Current autocomplete string
+        self.suggestion_active = False
+
 
     def get_cursor(self):
         """ Get index value of current cursor position | None -> int """
         return self.index(tk.INSERT)
-        
+
+    def cursor_at_end(self, cursor=None, text= None):
+        """ Check if cursor at end, ignore trailing whitespace | None -> bool """
+        if not cursor:
+            cursor = self.get_cursor()
+        if not text:
+            text = self.current_text
+        if cursor >= len(text.rstrip()):
+            return True
+        return False
+
+    def cursor_moved(self):
+        """ Check if cursor moved | None -> bool or str"""
+        display_cursor = self.get_cursor()
+        if self.current_cursor == display_cursor:
+            return False
+        if self.current_cursor > display_cursor:
+            return 'LEFT'
+        if self.current_cursor < display_cursor:
+            return 'RIGHT'
+
     def set_cursor(self, index):
         """ Set cursor at specific index | int -> None """
         self.icursor(index)
@@ -101,28 +134,29 @@ class Key(tk.Entry):
             end = next_space
         return end
 
-    def compare_states(self):
-        """ Check if user typed suggested next letter | None -> Bool
+    def update_current(self):
+        """ Display text and cursor become current | None -> None """
+        display_text = self.get()
+        if self.suggestion_active:
+            self.current_text = display_text[:-len(self.suggestion_text)]
+        else:
+            self.current_text = display_text
+        self.current_cursor = self.get_cursor()
+
+    def text_changed(self):
+        """ Checks if user text changed since current_text | None -> bool """
+        if self.suggestion_active:
+            return self.get()[:-len(self.suggestion_text)] != self.current_text
+        return self.get() != self.current_text
         
-        If user typed next letter in suggestion, the display will currently
-        include that extra letter. For example, if 'ba' was autocompleted to 'baby',
-        typing a 'b' will display 'babby'. This method checks ('comparison' variable')
-        if removing the autocompleted 'b' (at index 3 in the example)
-        from the current display text would match with the previous autocomplete
-        suggestion ('self.previous_display'). If so, the user must have typed
-        the char we just removed for the check.
-        """
-        self.print_attributes('compare_states')
-        if self.auto_text == '': #If keypress did not input a new char:
-            return False
-        previous_cursor = self.get_cursor() - 1 #BUG: Will fail if clicked elsewhere
-        current = self.get() #Current displayed text
-        comparison = current[:previous_cursor] + current[previous_cursor+1:]
-        print('comparison', comparison)
-        print('previous_display', self.previous_display)
-        self.print_attributes()
-        return comparison == self.previous_display
-        
+    def get_difference(self):
+        """ Gets lastest user input | None -> str """
+        display_text = self.get()
+        text = display_text[len(self.current_text):] #Remove current text
+        if self.suggestion_active: #If suggestion displayed
+            text = text[:-len(self.suggestion_text)] #Remove suggestion text
+        return text #Remaining characters is the current input
+
     def autocomplete(self):
         """ Complete current key input with valid keys from db | None -> None """
         self.print_attributes('autocomplete')
@@ -138,43 +172,42 @@ class Key(tk.Entry):
             print('suggestion', suggestion)
             self.delete(start, end) #Delete current key from display
             self.insert(start, suggestion) #Replace with suggestion
-            self.previous_display = self.get() #Save suggestion for comparison
             self.set_cursor(cursor) #Set cursor to previous position
-            self.auto_cursor = cursor #Save cursor position for comparison
-            self.auto_text = suggestion[len(partial_key):] #Save autocompleted chars
+            #Save suggested chars
+            self.suggestion_text = suggestion[len(partial_key):]
+            self.suggestion_active = True
         self.print_attributes()
-
-    def reset_auto_vars(self):
-        """ Forget autocompleted text and cursor position | None -> None """
-        self.auto_text = ''
-        self.auto_cursor = None
         
-    def ignore_suggestion(self):
+    def ignore_suggestion(self, cursor=None):
         """ Delete autocompleted char suggestion from display | None -> None """
         self.print_attributes('ignore_suggestion')
-        cursor = self.get_cursor()
-        self.delete(cursor, cursor + len(self.auto_text))
-        self.reset_auto_vars()
+        end = tk.END
+        start = end - len(self.suggestion_text)
+        self.delete(start, end)
+        self.suggestion_text = ''
         self.print_attributes()
         
-    def confirm_suggestion(self):
+    def confirm_suggestion(self, cursor=None):
         """ Keep autocompleted text and set cursor | None -> Bool """
-        if not self.auto_text:
-            return False
+        if cursor:
+            end = cursor
+        else:
+            end = tk.END
         self.print_attributes('confirm_suggestion')
-        self.set_cursor(self.get_cursor() + len(self.auto_text))
-        self.insert(self.get_cursor(), ' ') 
-        self.reset_auto_vars()
+        self.set_cursor(end)
+        self.insert(end, ' ') 
+        self.suggestion_text = ''
         self.print_attributes()
-        return True
                    
     def print_attributes(self, func_string=None):
         """ Test function to debug autocomplete logic | optional:str -> None """
         if func_string:
             print('Inside:', func_string)
-        print('auto_text', self.auto_text)
-        print('auto_cursor', self.auto_cursor)
-        print('display text', self.get())
-        print('display cursor', self.get_cursor())
+        print(f'current_text = {self.current_text}')
+        print(f'current_cursor = {self.current_cursor}')
+        print(f'display_text = {self.get()}')
+        print(f'display_cursor = {self.get_cursor()}')
+        print(f'suggestion_text = {self.suggestion_text}')
+        print(f'suggestion_active = {self.suggestion_active}')
         if not func_string:
             print('Leaving function')

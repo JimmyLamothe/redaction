@@ -33,6 +33,7 @@ def load_key_dataframe():
     try:
         key_df = pd.read_pickle('database/key.pickle')
         print('Loading saved key dataframe')
+        print(key_df.head())
     except FileNotFoundError:
         print('No saved key dataframe')
         key_df = None
