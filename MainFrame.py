@@ -258,7 +258,7 @@ class MainFrame(tk.Frame):
 
     def handle_key_button_release(self, event):
         """ Button release manager for key widget | tk.Event -> None """
-        if self.key.suggestion_active: #If suggestion displayed
+        if self.key.suggestion_text: #If suggestion displayed
             if self.key.cursor_moved() == 'LEFT': #If cursor moved left
                 self.key.ignore_suggestion() #Delete suggestion text
             elif self.key.cursor_moved() == 'RIGHT': #If cursor moved right
@@ -266,30 +266,31 @@ class MainFrame(tk.Frame):
                 self.key.confirm_suggestion(cursor=self.key.get_cursor())
 
     def debug(self, number):
+        print('')
         print(number)
         print(f'current_text = {self.key.current_text}')
         print(f'current_cursor = {self.key.current_cursor}')
         print(f'display_text = {self.key.get()}')
         print(f'display_cursor = {self.key.get_cursor()}')
         print(f'suggestion_text = {self.key.suggestion_text}')
-        print(f'suggestion_active = {self.key.suggestion_active}')
+        print(f'suggestion_list = {self.key.suggestion_list}')
         
     def handle_key_key_release(self, event):
         """ Key release manager for key widget | tk.Event -> None """
         if event.keysym in self.delete_keysyms: #If input was a delete character:
             self.debug(1)
-            if self.key.suggestion_active:
+            if self.key.suggestion_text:
                 self.key.ignore_suggestion() #Delete suggestion text
             self.key.update_current() #Update current user text
             self.debug(1.0)
-        elif not self.key.suggestion_active: #If no suggestion displayed
+        elif not self.key.suggestion_text: #If no suggestion displayed
             self.debug(2)
             if self.key.text_changed(): #If input received
                 self.debug(2.1)
+                self.key.update_current()
                 if self.key.cursor_at_end(): #If cursor at end
                     self.debug(2.11)
                     self.key.autocomplete() #Get suggestion
-            self.key.update_current()
             self.debug(2.0)
         elif not self.key.text_changed(): #If no new input char
             self.debug(3)
@@ -302,7 +303,7 @@ class MainFrame(tk.Frame):
                 self.key.confirm_suggestion(cursor=self.key.get_cursor())
             self.key.update_current()
             self.debug(3.0)
-        else:
+        else: #If suggestion active and text changed
             self.debug(4)
             current_input = self.key.get_difference() #Get new user input
             self.key.update_current()
@@ -310,12 +311,13 @@ class MainFrame(tk.Frame):
             print(f'len(current_input) = {len(current_input)}')
             if not len(current_input) == 1: #If user input more than one char
                 self.debug(4.1)
-                self.key_ignore_suggestion() #Delete suggestion text
+                self.key.ignore_suggestion() #Delete suggestion text
                 #self.key.update_current()
             #If input char was next char in suggestion
             elif current_input == self.key.suggestion_text[0]:
                 self.debug(4.2)
                 #Confirm suggestion up to cursor
+                self.key.suggestion_text = self.key.suggestion_text[1:]
                 self.key.confirm_suggestion(self.key.current_cursor) 
                 #self.key.update_current() 
             else:

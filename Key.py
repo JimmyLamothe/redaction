@@ -24,10 +24,11 @@ class Key(tk.Entry):
         master (tk.Frame): MainFrame object inheriting from tk.Frame 
 
     Attributes:
-        current_text
-        current_cursor
-        suggestion_text
-        suggestion_active
+        display_text = tk.StringVar
+        current_text = str
+        current_cursor = int
+        suggestion_text = str
+        suggestion_list = list
 
     Methods:
         __init__(MainFrame)
@@ -44,7 +45,7 @@ class Key(tk.Entry):
         autocomplete()
         ignore_suggestion()
         confirm_suggestion()
-        print_attributes(optional:str)
+        debug(str, opt:bool)
     """
     def __init__(self, master):
         self.display_text = tk.StringVar() #Text displayed in entry
@@ -65,8 +66,7 @@ class Key(tk.Entry):
         self.current_text = '' #Actual text input by user
         self.current_cursor = None #Current tracked cursor position
         self.suggestion_text = '' #Current autocomplete string
-        self.suggestion_active = False
-
+        self.suggestion_list = []
 
     def get_cursor(self):
         """ Get index value of current cursor position | None -> int """
@@ -100,6 +100,12 @@ class Key(tk.Entry):
         """ Delete all text from Key widget | None -> None """
         self.delete(0, len(self.get()))
 
+    def update_display(self):
+        self.debug('update_display')
+        self.display_text.set(self.current_text + self.suggestion_text)
+        self.set_cursor(len(self.current_text))
+        self.debug('update_display', out=True)
+        
     def delete_word(self):
         """ Delete prior characters until next space or start | None -> None """
         print('deleting')
@@ -136,16 +142,18 @@ class Key(tk.Entry):
 
     def update_current(self):
         """ Display text and cursor become current | None -> None """
+        self.debug('update_current')
         display_text = self.get()
-        if self.suggestion_active:
+        if self.suggestion_text:
             self.current_text = display_text[:-len(self.suggestion_text)]
         else:
             self.current_text = display_text
         self.current_cursor = self.get_cursor()
+        self.debug('update_current', out=True)
 
     def text_changed(self):
         """ Checks if user text changed since current_text | None -> bool """
-        if self.suggestion_active:
+        if self.suggestion_text:
             return self.get()[:-len(self.suggestion_text)] != self.current_text
         return self.get() != self.current_text
         
@@ -153,61 +161,63 @@ class Key(tk.Entry):
         """ Gets lastest user input | None -> str """
         display_text = self.get()
         text = display_text[len(self.current_text):] #Remove current text
-        if self.suggestion_active: #If suggestion displayed
+        if self.suggestion_text: #If suggestion displayed
             text = text[:-len(self.suggestion_text)] #Remove suggestion text
         return text #Remaining characters is the current input
 
     def autocomplete(self):
         """ Complete current key input with valid keys from db | None -> None """
-        self.print_attributes('autocomplete')
-        cursor = self.get_cursor()
-        start = self.get_key_start(cursor)
-        end = self.get_key_end(cursor)
-        partial_key = self.get()[start:end] #Current key being typed
-        print(partial_key)
+        self.debug('autocomplete')
+        partial_key = self.current_text.split()[-1] #Get last partial key
         suggestion_list = db.valid_keys(partial_key) #All valid possible keys
         print('suggestion_list', suggestion_list)
         if suggestion_list: #If current input can be completed with a valid key: 
             suggestion = suggestion_list[0] #TODO: Rank suggestions
             print('suggestion', suggestion)
-            self.delete(start, end) #Delete current key from display
-            self.insert(start, suggestion) #Replace with suggestion
-            self.set_cursor(cursor) #Set cursor to previous position
             #Save suggested chars
             self.suggestion_text = suggestion[len(partial_key):]
-            self.suggestion_active = True
-        self.print_attributes()
+            self.suggestion_list = suggestion_list
+            self.update_display()
+        self.debug('autocomplete', out=True)
+
+    def reset_suggestions(self):
+        self.suggestion_list = []
+        self.suggestion_text = ''
         
     def ignore_suggestion(self, cursor=None):
         """ Delete autocompleted char suggestion from display | None -> None """
-        self.print_attributes('ignore_suggestion')
-        end = tk.END
-        start = end - len(self.suggestion_text)
-        self.delete(start, end)
-        self.suggestion_text = ''
-        self.print_attributes()
+        self.debug('ignore_suggestion')
+        self.reset_suggestions()
+        self.update_display()
+        self.update_current()
+        self.autocomplete()
+        self.debug('ignore_suggestion', out=True)
         
     def confirm_suggestion(self, cursor=None):
-        """ Keep autocompleted text and set cursor | None -> Bool """
+        """ Keep autocompleted text and set cursor | None -> None """
+        self.debug('confirm_suggestion')
+        start = len(self.current_text)
         if cursor:
             end = cursor
         else:
-            end = tk.END
-        self.print_attributes('confirm_suggestion')
-        self.set_cursor(end)
-        self.insert(end, ' ') 
-        self.suggestion_text = ''
-        self.print_attributes()
+            end = len(self.get())
+        chars = end - start
+        self.current_text += self.suggestion_text[:chars]
+        self.suggestion_text = self.suggestion_text[chars:]
+        self.update_display()
+        self.debug('confirm_suggestion', out=True)
+        return True #For tab autocomplete
                    
-    def print_attributes(self, func_string=None):
+    def debug(self, name, out=False):
         """ Test function to debug autocomplete logic | optional:str -> None """
-        if func_string:
-            print('Inside:', func_string)
+        print('')
+        if not out:
+            print(f'Inside: {name}')
         print(f'current_text = {self.current_text}')
         print(f'current_cursor = {self.current_cursor}')
         print(f'display_text = {self.get()}')
         print(f'display_cursor = {self.get_cursor()}')
         print(f'suggestion_text = {self.suggestion_text}')
-        print(f'suggestion_active = {self.suggestion_active}')
-        if not func_string:
-            print('Leaving function')
+        print(f'suggestion_list = {self.suggestion_list}')
+        if out:
+            print(f'Leaving: {name}')
