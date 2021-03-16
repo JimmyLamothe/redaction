@@ -79,7 +79,9 @@ class Key(tk.Text):
     def get_cursor(self):
         """ Get index value of current cursor position | None -> int """
         #print(f'\nGetting cursor at: {self.index(tk.INSERT)}')
-        return int(self.index(tk.INSERT)[2])
+        cursor = self.index(tk.INSERT)
+        start = cursor.find('.') + 1
+        return int(cursor[start:])
 
     def cursor_at_end(self, cursor=None, text= None):
         """ Check if cursor at end, ignore trailing whitespace | None -> bool """
@@ -101,9 +103,14 @@ class Key(tk.Text):
         if self.current_cursor < display_cursor:
             return 'RIGHT'
 
+    @staticmethod
+    def text_cursor(index):
+        """ Convert int index to text widget index | int -> str """
+        return f'1.{index}'
+    
     def set_cursor(self, index):
         """ Set cursor at specific index | int -> None """
-        self.mark_set(tk.INSERT, f'1.{index}')
+        self.mark_set(tk.INSERT, Key.text_cursor(index))
 
     def clear(self):
         """ Delete all text from Key widget | None -> None """
@@ -118,13 +125,15 @@ class Key(tk.Text):
         self.tag_add('grey', suggestion_start, suggestion_end)
         self.set_cursor(len(self.current_text))
         self.debug('update_display', out=True)
-        
+
     def delete_word(self):
         """ Delete prior characters until next space or start | None -> None """
         print('deleting')
-        end = self.get_cursor()
+        self.ignore_suggestion()
+        end = Key.text_cursor(self.get_cursor())
         display = self.get_contents()
-        start = max(display.rfind(' '), 0)
+        start = Key.text_cursor(max(display.rfind(' '), 0))
+        print(f'deleting word at {start}, {end}')
         self.delete(start, end)
         
     @staticmethod
@@ -183,7 +192,10 @@ class Key(tk.Text):
         """ Complete current key input with valid keys from db | None -> None """
         self.debug('autocomplete')
         partial_key = self.current_text.split()[-1] #Get last partial key
-        suggestion_list = db.valid_keys(partial_key) #All valid possible keys
+        if self.suggestion_list:
+            suggestion_list = self.suggestion_list
+        else:
+            suggestion_list = db.valid_keys(partial_key) #All valid possible keys
         print('suggestion_list', suggestion_list)
         if suggestion_list: #If current input can be completed with a valid key: 
             suggestion = suggestion_list[0] #TODO: Rank suggestions
@@ -194,6 +206,14 @@ class Key(tk.Text):
             self.update_display()
         self.debug('autocomplete', out=True)
 
+    def update_suggestions(self):
+        """ Removes impossible suggestions as user types | None -> None """
+        self.debug('update_suggestions')
+        self.suggestion_list = [suggestion for suggestion in self.suggestion_list
+                                if suggestion.startswith(self.current_text)
+                                and not suggestion == self.current_text]
+        self.debug('update_suggestions', out=True)
+        
     def reset_suggestions(self):
         self.suggestion_list = []
         self.suggestion_text = ''
@@ -209,6 +229,8 @@ class Key(tk.Text):
         
     def confirm_suggestion(self, cursor=None):
         """ Keep autocompleted text and set cursor | None -> None """
+        if not self.suggestion_text:
+            return False #For tab autocomplete
         self.debug('confirm_suggestion')
         start = len(self.current_text)
         if cursor:

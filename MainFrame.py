@@ -236,13 +236,15 @@ class MainFrame(tk.Frame):
 
     def block_key_new_line(self, event):
         """ Prevent new lines in key text widget | None -> str """
-        return('break') #Interrupt standard tkinter event processing
+        return 'break' #Interrupt standard tkinter event processing
         
     def handle_key_tab(self, event):
         """ Handle tab keypress in Key entry widget | None -> str """
         if self.key.confirm_suggestion():
-            return('break') #Interrupt standard tkinter event processing
-
+            return 'break' #Interrupt standard tkinter event processing
+        self.phrase.focus()
+        return 'break'
+    
     def handle_phrase_tab(self, event):
         """ Handle tab keypress in Phrase text widget | None -> str """
         self.key.focus()
@@ -283,9 +285,11 @@ class MainFrame(tk.Frame):
         """ Key release manager for key widget | tk.Event -> None """
         if event.keysym in self.delete_keysyms: #If input was a delete character:
             self.debug(1)
-            if self.key.suggestion_text:
-                self.key.ignore_suggestion() #Delete suggestion text
             self.key.update_current() #Update current user text
+            if self.key.suggestion_text:
+                self.key.ignore_suggestion() #Delete suggestions and update display
+            else:
+                self.key.reset_suggestions() #Delete suggestions
             self.debug(1.0)
         elif not self.key.suggestion_text: #If no suggestion displayed
             self.debug(2)
@@ -323,12 +327,13 @@ class MainFrame(tk.Frame):
                 #Confirm suggestion up to cursor
                 self.key.suggestion_text = self.key.suggestion_text[1:]
                 self.key.confirm_suggestion(self.key.current_cursor) 
-                #self.key.update_current() 
+                self.key.update_suggestions()
+                self.key.autocomplete() #Get next top suggestion from list
             else:
                 self.debug(4.3)
                 self.key.ignore_suggestion() #Delete suggestion text
                 #self.key.update_current()
-                self.key.autocomplete() #Get suggestion
+                self.key.autocomplete() #Get new suggestions
             self.debug(4.0)
         self.autocomplete()
         
