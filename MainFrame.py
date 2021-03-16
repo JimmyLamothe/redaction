@@ -233,6 +233,10 @@ class MainFrame(tk.Frame):
         #Clear widgets after save
         self.phrase.clear()
         self.key.clear()
+
+    def block_key_new_line(self, event):
+        """ Prevent new lines in key text widget | None -> str """
+        return('break') #Interrupt standard tkinter event processing
         
     def handle_key_tab(self, event):
         """ Handle tab keypress in Key entry widget | None -> str """
@@ -270,7 +274,7 @@ class MainFrame(tk.Frame):
         print(number)
         print(f'current_text = {self.key.current_text}')
         print(f'current_cursor = {self.key.current_cursor}')
-        print(f'display_text = {self.key.get()}')
+        print(f'display_text = {self.key.get_contents()}')
         print(f'display_cursor = {self.key.get_cursor()}')
         print(f'suggestion_text = {self.key.suggestion_text}')
         print(f'suggestion_list = {self.key.suggestion_list}')
@@ -346,6 +350,7 @@ class MainFrame(tk.Frame):
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
         #Key bindings - active when focus on Key entry widget
+        self.key.bind('<Return>', self.block_key_new_line)
         self.key.bind('<Tab>', self.handle_key_tab)
         self.key.bind('<BackSpace>', self.handle_key_backspace)
         self.key.bind('<KeyRelease>', self.handle_key_key_release)

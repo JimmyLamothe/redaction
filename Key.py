@@ -9,16 +9,19 @@ import tkinter as tk
 import config
 import database as db
 
-class Key(tk.Entry):
-    """ Implements the logic and interface for the Key entry widget
+class Key(tk.Text):
+    """ Implements the logic and interface for the Key text widget
 
-    The Key entry widget is where the user enters one or more keys in order
+    The Key text widget is where the user enters one or more keys in order
     for the corresponding phrases to be displayed in the Phrase text widget,
     or to save the keys and associate them with the current phrase.
 
 
     It implements an autocomplete feature displaying a valid complete key
     corresponding to current input.
+
+    It is limited to a single line and is a text widget rather than an
+    entry widget to allow a different color for the aucompletion.
 
     Args:
         master (tk.Frame): MainFrame object inheriting from tk.Frame 
@@ -48,11 +51,11 @@ class Key(tk.Entry):
         debug(str, opt:bool)
     """
     def __init__(self, master):
-        self.display_text = tk.StringVar() #Text displayed in entry
-        tk.Entry.__init__(
+        tk.Text.__init__(
             self,
             master=master, #MainFrame object
-            textvariable=self.display_text,
+            height=1,
+            width=40,
             relief=tk.RIDGE,
             borderwidth=2,
             highlightbackground='#EEEEEE',
@@ -67,10 +70,16 @@ class Key(tk.Entry):
         self.current_cursor = None #Current tracked cursor position
         self.suggestion_text = '' #Current autocomplete string
         self.suggestion_list = []
-
+        self.tag_configure('grey', foreground='#666666')
+        
+    def get_contents(self):
+        """ Return text contents of widget | None -> str """
+        return self.get('1.0', tk.END)[:-1] #Remove carriage return
+        
     def get_cursor(self):
         """ Get index value of current cursor position | None -> int """
-        return self.index(tk.INSERT)
+        #print(f'\nGetting cursor at: {self.index(tk.INSERT)}')
+        return int(self.index(tk.INSERT)[2])
 
     def cursor_at_end(self, cursor=None, text= None):
         """ Check if cursor at end, ignore trailing whitespace | None -> bool """
@@ -94,15 +103,19 @@ class Key(tk.Entry):
 
     def set_cursor(self, index):
         """ Set cursor at specific index | int -> None """
-        self.icursor(index)
-    
+        self.mark_set(tk.INSERT, f'1.{index}')
+
     def clear(self):
         """ Delete all text from Key widget | None -> None """
-        self.delete(0, len(self.get()))
+        self.delete('1.0', tk.END)
 
     def update_display(self):
         self.debug('update_display')
-        self.display_text.set(self.current_text + self.suggestion_text)
+        suggestion_start = f'1.{len(self.current_text)}'
+        suggestion_end = f'1.{len(self.current_text) + len(self.suggestion_text)}'
+        self.clear()
+        self.insert('1.0', self.current_text + self.suggestion_text)
+        self.tag_add('grey', suggestion_start, suggestion_end)
         self.set_cursor(len(self.current_text))
         self.debug('update_display', out=True)
         
@@ -110,7 +123,7 @@ class Key(tk.Entry):
         """ Delete prior characters until next space or start | None -> None """
         print('deleting')
         end = self.get_cursor()
-        display = self.get()
+        display = self.get_contents()
         start = max(display.rfind(' '), 0)
         self.delete(start, end)
         
@@ -123,16 +136,16 @@ class Key(tk.Entry):
 
     def get_display_key_list(self):
         """ Get list of keys from Key display string | None -> list """
-        return self.get_key_list(self.get())
+        return self.get_key_list(self.get_contents())
     
     def get_key_start(self, cursor):
         """ Get start of key at current cursor position | None -> int """
-        start = max(self.get()[:self.get_cursor()].rfind(' ') + 1, 0)
+        start = max(self.get_contents()[:self.get_cursor()].rfind(' ') + 1, 0)
         return start
 
     def get_key_end(self, cursor):
         """ Get end of key at current cursor position | None -> int """
-        display_text = self.get()
+        display_text = self.get_contents()
         next_space = display_text[self.get_cursor():].find(' ')
         if next_space == -1:
             end = len(display_text)
@@ -143,7 +156,7 @@ class Key(tk.Entry):
     def update_current(self):
         """ Display text and cursor become current | None -> None """
         self.debug('update_current')
-        display_text = self.get()
+        display_text = self.get_contents()
         if self.suggestion_text:
             self.current_text = display_text[:-len(self.suggestion_text)]
         else:
@@ -154,12 +167,13 @@ class Key(tk.Entry):
     def text_changed(self):
         """ Checks if user text changed since current_text | None -> bool """
         if self.suggestion_text:
-            return self.get()[:-len(self.suggestion_text)] != self.current_text
-        return self.get() != self.current_text
+            display_text = self.get_contents()
+            return display_text[:-len(self.suggestion_text)] != self.current_text
+        return self.get_contents() != self.current_text
         
     def get_difference(self):
         """ Gets lastest user input | None -> str """
-        display_text = self.get()
+        display_text = self.get_contents()
         text = display_text[len(self.current_text):] #Remove current text
         if self.suggestion_text: #If suggestion displayed
             text = text[:-len(self.suggestion_text)] #Remove suggestion text
@@ -190,7 +204,7 @@ class Key(tk.Entry):
         self.reset_suggestions()
         self.update_display()
         self.update_current()
-        self.autocomplete()
+        #self.autocomplete()
         self.debug('ignore_suggestion', out=True)
         
     def confirm_suggestion(self, cursor=None):
@@ -200,7 +214,7 @@ class Key(tk.Entry):
         if cursor:
             end = cursor
         else:
-            end = len(self.get())
+            end = len(self.get_contents())
         chars = end - start
         self.current_text += self.suggestion_text[:chars]
         self.suggestion_text = self.suggestion_text[chars:]
@@ -215,7 +229,7 @@ class Key(tk.Entry):
             print(f'Inside: {name}')
         print(f'current_text = {self.current_text}')
         print(f'current_cursor = {self.current_cursor}')
-        print(f'display_text = {self.get()}')
+        print(f'display_text = {self.get_contents()}')
         print(f'display_cursor = {self.get_cursor()}')
         print(f'suggestion_text = {self.suggestion_text}')
         print(f'suggestion_list = {self.suggestion_list}')
