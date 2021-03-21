@@ -47,7 +47,8 @@ class Phrase(tk.Text):
             self,
             master=master, #MainFrame object
             relief=tk.RIDGE,
-            borderwidth=2,
+            bg='#F5F5F5',#FFFFFF in put mode
+            borderwidth=4, #2 in put mode
             highlightbackground='#EEEEEE',
             highlightcolor='#EEEEEE', #No border on focus
             active_list=None, #Current valid phrases for current keys

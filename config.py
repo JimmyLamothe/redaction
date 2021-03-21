@@ -35,12 +35,14 @@ from json.decoder import JSONDecodeError
 
 #Default configuration on first execution or config reset
 DEFAULT_CONFIG = {
-    'initial_geometry':'',
-    'current_geometry':'',
-    'default_size':'600x250',
-    'show_buttons':True,
-    'language':'Français',
-    'db':'def'
+    'initial_geometry':'', #Initial size and position of app window
+    'current_geometry':'', #Current size and position of app window
+    'default_size':'600x250', #Default size of app window
+    'show_buttons':True, #Show or hide app buttons
+    'language':'Français', #Current app interface language
+    'mode':'put', #'get' entry from db or 'put' entry in db
+    'db':'def', #Database implementation to use - only for testing
+    'debug':False #Print debug information - only for testing
 }
 
 #Word equivalents in each supported language
@@ -48,7 +50,9 @@ FRENCH_DICT = {
     'key':'Clé',
     'phrase':'Phrase',
     'copy':'Copier',
-    'save':'Ajouter',
+    'save':'Enregistrer',
+    'new':'Nouveau',
+    'cancel':'Annuler',
     'language':'Langue',
     'show_buttons':'Montrer les boutons',
     'hide_buttons':'Cacher les boutons',
@@ -61,6 +65,8 @@ ENGLISH_DICT = {
     'phrase':'Phrase',
     'copy':'Copy',
     'save':'Save',
+    'new':'New',
+    'cancel':'Cancel',
     'language':'Language',
     'show_buttons':'Show buttons',
     'hide_buttons':'Hide buttons',
@@ -76,7 +82,7 @@ LANGUAGE_DICT = {
 
 #Holds references to GUI objects while app is active
 active_objects = { 
-    'root':None
+    'root':None,
 }
 
 def load_config():
@@ -111,14 +117,45 @@ def backup():
 def restore():
     """ Restores backup of config file | None -> None """
     shutil.copy2('config/config_bkup.json', 'config/config.json')
+
+def redraw():
+    """ Redraw app window after config changes | None -> None """
+    active_objects['root'].destroy()
+    active_objects['root'].redraw()
+
+def get_show_buttons():
+    """ Get show_buttons bool from config_dict | None -> bool """
+    return config_dict['show_buttons']
+    
+def get_mode():
+    """ Get current mode from config_dict | None -> str """
+    return config_dict['mode']
+
+def set_mode(mode):
+    """ Set current mode | str -> None """
+    config_dict['mode'] = mode
+
+def change_mode():
+    """ Change database mode | None -> None
+
+    'get' mode: retrieve entry from database
+    'put' mode: add, modify or delete database entry
+    """
+    if config_dict['mode'] == 'get':
+        print('Switching to put mode')
+        active_objects['root'].main_frame.activate_put_mode()
+        
+    else:
+        print('Switching to get mode')
+        active_objects['root'].main_frame.activate_get_mode()
     
 def set_language(language):
     """ Sets config to specific language and reloads interface | None -> None """
     print(language)
     config_dict['language'] = language
     print(config_dict)
-    active_objects['root'].destroy()
-    active_objects['root'].redraw()
+    language_dict = get_language_dict()
+    active_objects['root'].set_text()
 
 def get_language_dict():
     """ Get language dict for active language | None -> dict """
@@ -127,9 +164,7 @@ def get_language_dict():
 def show_buttons():
     """ Show buttons in GUI | None -> None """
     config_dict['show_buttons'] = True
-    active_objects['root'].destroy()
-    active_objects['root'].redraw()
-
+    
 def hide_buttons():
     """ Hide buttons in GUI | None -> None """
     config_dict['show_buttons'] = False
@@ -147,3 +182,13 @@ def get_config():
 def get_languages():
     """ Alphabetical list of supported languages | None -> list(str) """
     return sorted([key for key in LANGUAGE_DICT])
+
+def get_debug():
+    """ Get debug bool from config_dict | None -> bool """
+    return config_dict['debug']
+
+def debug_mode():
+    """ Switch debug mode on or off | None -> None """
+    print(f'Before: {config_dict["debug"]}')
+    config_dict['debug'] = not config_dict['debug']
+    print(f'After: {config_dict["debug"]}')

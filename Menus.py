@@ -47,6 +47,7 @@ class MenuBar(tk.Menu):
             menu=self.display_menu,
             label=language_dict['display']
         )
+
         
 class OptionMenu(tk.Menu):
     """ Implements the option menu
@@ -81,8 +82,8 @@ class OptionMenu(tk.Menu):
     def add_commands(self):
         """ Add items to option menu | None -> None """
         self.add_command(
-            label='Temp 2',
-            command=self.temp
+            label='Debug Mode',
+            command=config.debug_mode
         )
         self.add_command(
             label='Temp 3',

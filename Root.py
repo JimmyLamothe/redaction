@@ -25,8 +25,8 @@ class Root(tk.Tk):
     """
     def __init__(self):
         tk.Tk.__init__(self)
-        self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
         config.active_objects['root'] = self #Allows access outside creation module
+        self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
         self.main_frame = MainFrame(self)
         self.menu_bar = MenuBar(self)
         self['menu'] = self.menu_bar
@@ -38,6 +38,14 @@ class Root(tk.Tk):
         """ Redraws the application window using current config settings """
         config.save_config()
         self.__init__()
+
+    def set_text(self):
+        """ Sets text of all widgets to config settings | None -> None """
+        language_dict = config.get_language_dict()
+        self.title(language_dict['title'])
+        self.menu_bar = MenuBar(self)
+        self.config(menu = self.menu_bar)
+        self.main_frame.set_text(language_dict)
 
     def set_geometry(self):
         """ Sets the window geometry according to default or current settings """
@@ -58,8 +66,9 @@ class Root(tk.Tk):
         #Use above as reference
         pass
     
-    def bind_events(self):
+    def bind_events(self, test=False):
         """ Binds all application window events """
         self.bind('<Configure>', self.save_geometry)
-        #print_tracked_events(self) #Uncomment for testing
+        if test:
+            print_tracked_events(self) #Uncomment for testing
         #self.test_keystrokes() #Uncomment for testing

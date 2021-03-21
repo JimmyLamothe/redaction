@@ -53,9 +53,10 @@ class MainFrame(tk.Frame):
         self.phrase_label = self.create_phrase_label()
         self.phrase = Phrase(self)
         self.delete_keysyms = ['Delete','KP_Delete','BackSpace']
-        if config.config_dict['show_buttons']:
-            self.save_button = self.create_save_button()
-            self.copy_button = self.create_copy_button()
+        if config.get_show_buttons():
+            print('creating buttons')
+            self.left_button = self.create_left_button()
+            self.right_button = self.create_right_button()
             self.up_button = self.create_up_button()
             self.down_button = self.create_down_button()
         self.configure_gui()
@@ -81,13 +82,29 @@ class MainFrame(tk.Frame):
         )
         return label
 
-    def create_copy_button(self):
-        """ Creates a copy button | None -> tk.Button """
+    def create_left_button(self):
+        """ Creates button on left of app window| None -> tk.Button """
         language_dict = config.get_language_dict() #Active language name dict
         button = tk.Button(
             master=self,
-            command=self.copy_phrase, #Copies active phrase to clipboard
-            text=language_dict['copy'],
+            command=config.change_mode,
+            text=language_dict['new'], #Changes with config.change_mode
+            relief=tk.RIDGE,
+            borderwidth=2,
+            fg='BLACK',
+            bg='#DDDDDD',
+            padx=10,
+            pady=5
+        )
+        return button
+
+    def create_right_button(self):
+        """ Creates button on right of app window | None -> tk.Button """
+        language_dict = config.get_language_dict() #Active language name dict
+        button = tk.Button(
+            master=self,
+            command=self.copy_phrase, #Changes with config.change_mode
+            text=language_dict['copy'], #Changes with config.change_mode
             relief=tk.RIDGE,
             borderwidth=2,
             fg='BLACK',
@@ -97,21 +114,43 @@ class MainFrame(tk.Frame):
         )
         return button
     
-    def create_save_button(self):
-        """ Creates a save button | None -> tk.Button """
-        language_dict = config.get_language_dict() #Active language name dict
-        button = tk.Button(
-            master=self,
-            command=self.save_entry, #Saves active key/phrase combination to db
+    def activate_get_mode(self):
+        """ Sets app to get entry from database | None -> None """
+        if config.get_mode() == 'get':
+            return
+        language_dict = config.get_language_dict()
+        self.phrase.config(
+            bg='#F5F5F5',
+            borderwidth=4
+            )        
+        self.left_button.config(
+            text=language_dict['new'],
+            )
+        self.right_button.config(
+            text=language_dict['copy'],
+            command=self.copy_phrase
+            )
+        self.key.focus()
+        config.set_mode('get')
+
+    def activate_put_mode(self):
+        """ Sets app to save entry to database | None -> None """
+        if config.get_mode() == 'put':
+            return
+        language_dict = config.get_language_dict()
+        self.phrase.config(
+            bg='#FFFFFF',
+            borderwidth=2
+            )
+        self.left_button.config(
+            text=language_dict['cancel'],
+            )
+        self.right_button.config(
             text=language_dict['save'],
-            relief=tk.RIDGE,
-            borderwidth=2,
-            fg='BLACK',
-            bg='#DDDDDD',
-            padx=10,
-            pady=5
+            command=self.save_entry
         )
-        return button
+        self.phrase.focus()
+        config.set_mode('put')
     
     def create_up_button(self):
         """ Creates previous phrase button | None -> tk.Button """
@@ -128,7 +167,7 @@ class MainFrame(tk.Frame):
             bg='#CCCCCC',
         )
         return button
-
+    
     def create_down_button(self):
         """ Creates next phrase button | None -> tk.Button """
         icon = Image.open('icons/noun_chevron down_730206.png')
@@ -144,7 +183,18 @@ class MainFrame(tk.Frame):
             bg='#CCCCCC',
         )
         return button
-            
+
+    def set_text(self, language_dict):
+        """ Sets text of all widgets to config settings | None -> None """
+        self.key_label.config(text=language_dict['key'])
+        self.phrase_label.config(text=language_dict['phrase'])
+        if config.get_mode() == 'get':
+            self.left_button.config(text=language_dict['new'])
+            self.right_button.config(text=language_dict['copy'])
+        else:
+            self.left_button.config(text=language_dict['cancel'])
+            self.right_button.config(text=language_dict['save'])
+    
     def configure_gui(self):
         """ Configures tkinter GUI | None -> None """
         #Define rows and columns
@@ -178,15 +228,15 @@ class MainFrame(tk.Frame):
             padx=(0,20),
             pady=(5,10)
         )
-        if config.config_dict['show_buttons']:
-            self.save_button.grid(
+        if config.get_show_buttons():
+            self.left_button.grid(
                 row=2,
                 column=1,
                 sticky='w',
                 padx=(20,0),
                 pady=(0,15)
             )
-            self.copy_button.grid(
+            self.right_button.grid(
                 row=2,
                 column=1,
                 sticky='e',
@@ -229,7 +279,7 @@ class MainFrame(tk.Frame):
         print(phrase)
         #Save combination
         db.save_entry(key_list, phrase)
-        print(db.key_df)
+        print(db.db)
         #Clear widgets after save
         self.phrase.clear()
         self.key.clear()
@@ -271,7 +321,12 @@ class MainFrame(tk.Frame):
                 #Confirm suggestion up to cursor position
                 self.key.confirm_suggestion(cursor=self.key.get_cursor())
 
+    def handle_phrase_button_release(self, event):
+        self.activate_put_mode()
+
     def debug(self, number):
+        if not config.get_debug():
+            return
         print('')
         print(number)
         print(f'current_text = {self.key.current_text}')
@@ -283,61 +338,72 @@ class MainFrame(tk.Frame):
         
     def handle_key_key_release(self, event):
         """ Key release manager for key widget | tk.Event -> None """
+        #No autocomplete for key widget in put mode
+        if not config.get_mode() == 'put':
+            self.autocomplete(event, self.key)
+
+    def handle_phrase_key_release(self, event):
+        #No autocomplete for phrase widget in get mode
+        if not config.get_mode() == 'get':
+            self.autocomplete(event, self.phrase)
+    
+    def autocomplete(self, event, widget):
+        """ Autocomplete for key and phrase | tk.Event, tk.Text -> None """
         if event.keysym in self.delete_keysyms: #If input was a delete character:
             self.debug(1)
-            self.key.update_current() #Update current user text
-            if self.key.suggestion_text:
-                self.key.ignore_suggestion() #Delete suggestions and update display
+            widget.update_current() #Update current user text
+            if widget.suggestion_text:
+                widget.ignore_suggestion() #Delete suggestions and update display
             else:
-                self.key.reset_suggestions() #Delete suggestions
+                widget.reset_suggestions() #Delete suggestions
             self.debug(1.0)
-        elif not self.key.suggestion_text: #If no suggestion displayed
+        elif not widget.suggestion_text: #If no suggestion displayed
             self.debug(2)
-            if self.key.text_changed(): #If input received
+            if widget.text_changed(): #If input received
                 self.debug(2.1)
-                self.key.update_current()
-                if self.key.cursor_at_end(): #If cursor at end
+                widget.update_current()
+                if widget.cursor_at_end(): #If cursor at end
                     self.debug(2.11)
-                    self.key.autocomplete() #Get suggestion
+                    widget.get_suggestion() #Get suggestion
             self.debug(2.0)
-        elif not self.key.text_changed(): #If no new input char
+        elif not widget.text_changed(): #If no new input char
             self.debug(3)
-            if self.key.cursor_moved() == 'LEFT': #If cursor moved left
+            if widget.cursor_moved() == 'LEFT': #If cursor moved left
                 self.debug(3.1)
-                self.key.ignore_suggestion() #Delete suggestion text
-            elif self.key.cursor_moved() == 'RIGHT': #If cursor moved right
+                widget.ignore_suggestion() #Delete suggestion text
+            elif widget.cursor_moved() == 'RIGHT': #If cursor moved right
                 self.debug(3.2)
                 #Confirm suggestion up to cursor position
-                self.key.confirm_suggestion(cursor=self.key.get_cursor())
-            self.key.update_current()
+                widget.confirm_suggestion(cursor=widget.get_cursor())
+            widget.update_current()
             self.debug(3.0)
         else: #If suggestion active and text changed
             self.debug(4)
-            current_input = self.key.get_difference() #Get new user input
-            self.key.update_current()
+            current_input = widget.get_difference() #Get new user input
+            widget.update_current()
             print(f'current_input = {current_input}')
             print(f'len(current_input) = {len(current_input)}')
             if not len(current_input) == 1: #If user input more than one char
                 self.debug(4.1)
-                self.key.ignore_suggestion() #Delete suggestion text
-                #self.key.update_current()
+                widget.ignore_suggestion() #Delete suggestion text
+                #widget.update_current()
             #If input char was next char in suggestion
-            elif current_input == self.key.suggestion_text[0]:
+            elif current_input == widget.suggestion_text[0]:
                 self.debug(4.2)
                 #Confirm suggestion up to cursor
-                self.key.suggestion_text = self.key.suggestion_text[1:]
-                self.key.confirm_suggestion(self.key.current_cursor) 
-                self.key.update_suggestions()
-                self.key.autocomplete() #Get next top suggestion from list
+                widget.suggestion_text = widget.suggestion_text[1:]
+                widget.confirm_suggestion(widget.current_cursor) 
+                widget.update_suggestions()
+                widget.get_suggestion() #Get next top suggestion from list
             else:
                 self.debug(4.3)
-                self.key.ignore_suggestion() #Delete suggestion text
-                #self.key.update_current()
-                self.key.autocomplete() #Get new suggestions
+                widget.ignore_suggestion() #Delete suggestion text
+                #widget.update_current()
+                widget.get_suggestion() #Get new suggestions
             self.debug(4.0)
-        self.autocomplete()
+        self.suggest_phrase()
         
-    def autocomplete(self):
+    def suggest_phrase(self):
         key_list = self.key.get_display_key_list() #Includes suggestion if any
         success = self.phrase.display_phrase(key_list) #Display top valid phrase
         if not success: #If no valid phrase with autocompleted Key input:
@@ -354,6 +420,7 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
+        self.master.bind('<Escape>', lambda event: config.change_mode())
         #Key bindings - active when focus on Key entry widget
         self.key.bind('<Return>', self.block_key_new_line)
         self.key.bind('<Tab>', self.handle_key_tab)
@@ -363,4 +430,5 @@ class MainFrame(tk.Frame):
         #Phrase bindings - active when focus on Phrase text widget
         self.phrase.bind('<Tab>', self.handle_phrase_tab)
         self.phrase.bind('<BackSpace>', self.handle_phrase_backspace)
+        self.phrase.bind('<ButtonRelease>', self.handle_phrase_button_release)
         #self.phrase.bind('<KeyRelease>', self.handle_phrase_input)

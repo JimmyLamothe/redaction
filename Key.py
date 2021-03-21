@@ -45,7 +45,7 @@ class Key(tk.Text):
         get_key_start(int)
         get_key_end(int)
         compare_states()
-        autocomplete()
+        get_suggestion()
         ignore_suggestion()
         confirm_suggestion()
         debug(str, opt:bool)
@@ -188,9 +188,9 @@ class Key(tk.Text):
             text = text[:-len(self.suggestion_text)] #Remove suggestion text
         return text #Remaining characters is the current input
 
-    def autocomplete(self):
+    def get_suggestion(self):
         """ Complete current key input with valid keys from db | None -> None """
-        self.debug('autocomplete')
+        self.debug('get_suggestion')
         partial_key = self.current_text.split()[-1] #Get last partial key
         if self.suggestion_list:
             suggestion_list = self.suggestion_list
@@ -204,7 +204,7 @@ class Key(tk.Text):
             self.suggestion_text = suggestion[len(partial_key):]
             self.suggestion_list = suggestion_list
             self.update_display()
-        self.debug('autocomplete', out=True)
+        self.debug('get_suggestion', out=True)
 
     def update_suggestions(self):
         """ Removes impossible suggestions as user types | None -> None """
@@ -224,7 +224,6 @@ class Key(tk.Text):
         self.reset_suggestions()
         self.update_display()
         self.update_current()
-        #self.autocomplete()
         self.debug('ignore_suggestion', out=True)
         
     def confirm_suggestion(self, cursor=None):
@@ -246,6 +245,8 @@ class Key(tk.Text):
                    
     def debug(self, name, out=False):
         """ Test function to debug autocomplete logic | optional:str -> None """
+        if not config.config_dict['debug']:
+            return
         print('')
         if not out:
             print(f'Inside: {name}')

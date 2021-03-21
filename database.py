@@ -7,14 +7,14 @@ database implementations can be tested as 'database_alt.py' with the
 'speedtest.py' script.
 
 Database variable:
-    key_df
+    db
 
 Functions:
-    load_key_dataframe() -> pd.DataFrame
+    load_database() -> pd.DataFrame
     get_phrase_series() -> pd.Series
     save(pd.DataFrame)
     add_column_if_missing(string, pd.DataFrame)
-    initialize_key_df(list, string) -> pd.DataFrame
+    initialize_db(list, string) -> pd.DataFrame
     save_entry(list, string)
     get_phrase_list(list) -> list
     valid_keys(string) -> list
@@ -28,61 +28,66 @@ import random
 import pandas as pd
 import numpy as np
 
-def load_key_dataframe():
-    """ Loads key DataFrame from disk if it exists | None -> pd.DataFrame or None """
+def load_database():
+    """ Loads database from disk if it exists | None -> pd.DataFrame or None """
     try:
-        key_df = pd.read_pickle('database/key.pickle')
+        db = pd.read_pickle('database/key.pickle')
         print('Loading saved key dataframe')
-        print(key_df.head())
+        print(db.head())
     except FileNotFoundError:
         print('No saved key dataframe')
-        key_df = None
-    return key_df
+        db = None
+    return db
 
 def get_phrase_series():
     """ Gets phrase Series from key DataFrame | None -> pd.Series """
-    return key_df.index
+    return db.index
 
-key_df = load_key_dataframe() #The application database (Pandas DataFrame)
+db = load_database() #The application database (Pandas DataFrame)
 
-def save(key_df):
-    """ Save contents of database to disk | df.DataFrame -> None """
-    key_df.to_pickle('database/key.pickle')
+def save(db):
+    """ Save contents of database to disk | db.DataFrame -> None """
+    db.to_pickle('database/key.pickle')
     
-def add_column_if_missing(name, df):
+def add_column_if_missing(name, db):
     """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
-    if not name in df.columns:
-        df[name] = False
+    if not name in db.columns:
+        db[name] = False
 
-def initialize_key_df(key_list, phrase):
+def initialize_db(key_list, phrase):
     """ Create new database on first saved entry | list(str), str -> pd.DataFrame """
     print('Initializing DataFrame')
     row_data = []
     for i in range(len(key_list)):
         row_data.append(True)
-    global key_df
-    key_df = pd.DataFrame.from_dict({phrase:row_data},
+    global db
+    db = pd.DataFrame.from_dict({phrase:row_data},
                                     orient='index',
                                     columns=key_list)
-    return key_df
+    return db
 
-def save_entry(key_list, phrase, key_df=key_df):
+def save_entry(key_list, phrase, db=db):
     """ Save new key/phrase combination to database | list(str), str -> None """
-    if key_df is None: #If first entry, initialize new database
-        key_df = initialize_key_df(key_list, phrase)
-        save_entry(key_list, phrase, key_df=key_df)
+    if not phrase: #To prevent accidental empty phrase entry
+        return
+    if db is None: #If first entry, initialize new database
+        db = initialize_db(key_list, phrase)
+        save_entry(key_list, phrase, db=db)
+        
     else:
         print('Found DataFrame')
-        key_df.loc[phrase] = False #Initialize row with all False 
+        if not key_list: #If no keys given
+            db = db.drop(phrase) #Used to delete phrase from database
+        db.loc[phrase] = False #Initialize row with all False 
         for key in key_list:
-            add_column_if_missing(key, key_df) #Add missing new keys 
-        key_df.loc[phrase, key_list] = True #Set keys in key_list to True
-        save(key_df)
+            add_column_if_missing(key, db) #Add missing new keys 
+        db.loc[phrase, key_list] = True #Set keys in key_list to True
+        save(db)
     
 def get_phrase_list(key_list):
     """ Get list of valid phrases for a list of keys | list(str) -> list(str) """
     try:
-        index = key_df.loc[key_df[key_list].all(axis=1), :].index
+        index = db.loc[db[key_list].all(axis=1), :].index
         return list(index.values)
     except KeyError:
         return None
@@ -90,8 +95,8 @@ def get_phrase_list(key_list):
 def valid_keys(partial_key):
     """ Get list of db keys starting with specific string | str -> list(str) """
     if partial_key:
-        mask = key_df.columns.str.lower().str.startswith(partial_key.lower())
-        return list(key_df.columns[mask])
+        mask = db.columns.str.lower().str.startswith(partial_key.lower())
+        return list(db.columns[mask])
     return []
 
 def get_words(word_list, minimum, maximum):
@@ -122,5 +127,5 @@ def generate_test_db(language='fr', size=500):
         print(f'Generating entry {i+1} of {size}')
         save_entry(generate_key_list(word_list),
                    generate_phrase(word_list),
-                   key_df=key_df)
-    print(key_df)
+                   db=db)
+    print(db)

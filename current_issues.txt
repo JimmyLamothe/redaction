@@ -1,29 +1,6 @@
-TODO: Tests: Check if key_release or key_press events are better to catch.
-
-TODO: Refactoring: Rename key_df since it now includes phrases
-
-TODO: Bug: Saving empty phrase should be impossible
-
-TODO: Bug: Autocomplete - previous_cursor in key.compare_states won't work if user
-      	   has clicked elsewhere in the entry.
-      Idea: Track mouse clicks
-
-TODO: Improve: Autocomplete needs more work - ideas here
-      Idea: Autocomplete checks if cursor is at end of last character before running.
-            Also runs if user continued typing at same cursor as previous
-	    autocomplete
-
-TODO: Feature: Autocomplete should be in gray like Google does
-
-TODO: Bug: When user types too fast, autocomplete can't keep up
-      Idea: Set flag when user types - check flag before inserting text
-
-TODO: Bug: Alt_database - Fix repeated columns on initial creation
-
-TODO: Tests: Time difference between Pandas and SQLite
-
-
-TODO: Structure: Convert database to class?
+TODO: Concept: Entry mode vs Retrieve mode
+      Problem: Autocomplete must work differently depending on if you want
+      	       to add an entry or get an entry
 
 TODO: Feature: Add translation mode
 
@@ -32,5 +9,45 @@ TODO: Feature: Use Phrase space as menu hints
 TODO: Feature: Undo and Redo
       Idea: Save states - figure out which variables need to be tracked
 
+TODO: Tests: Check if key_release or key_press events are better to catch.
+
+TODO: Bug: Drag-select isn't handled by autocomplete
+      	   Many small details to fix with mouse cursor changes
+
+TODO: Refactor: Split handle_key_key_release into multiple functions.
+      		Rename to something making it clear it handles autocomplete.
+		Take a widget as argument and handle both phrase and key.
+
+TODO: Bug: Alt_database - Fix repeated columns on initial creation
+      Progress: Check if still a problem
+
+TODO: Bug: If user types too fast, autocomplete can't keep up
+      Idea: Set flag when user types - check flag before inserting text
+      Progress: Autocomplete now fast enough, not a problem on test machine
+      Test: Freeze and install on slow computer to check if still true
+
 DONE: Tests: Time difference between database and alt_database
       Result: Alt database was 100 times quicker and is now the default database.
+
+DONE: Improve: Autocomplete needs more work - ideas here
+      Idea: Autocomplete checks if cursor is at end of last character before running.
+            Also runs if user continued typing at same cursor as previous
+	    autocomplete.
+
+DONE: Feature: Autocomplete should be in gray like Google does
+
+DONE: Refactoring: Rename key_df since it now includes phrases
+      Done: Renamed to db - stable name even if implementation changes
+
+DONE: Bug: Autocomplete - previous_cursor in key.compare_states won't work if user
+      	   has clicked elsewhere in the entry.
+      Idea: Track mouse clicks
+      Progress: New version doesn't use compare_states
+
+DONE: Bug: Saving empty phrase should be impossible
+
+IGNORED: Refactor: Convert database to class?
+	 Reason: Works fine as is, no reason to use a class here
+
+IGNORED: Tests: Time difference between Pandas and SQLite
+	 Reason: For now, speed is plenty sufficient as is. Revisit if needed
