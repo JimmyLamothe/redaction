@@ -2,6 +2,14 @@ TODO: Concept: Entry mode vs Retrieve mode
       Problem: Autocomplete must work differently depending on if you want
       	       to add an entry or get an entry
 
+TODO: Refactor: All autocomplete functionality in single AutoText class
+      		inheriting from tk.Text
+
+TODO: Feature: Pro mode - No buttons - No hints - Tab to switch
+      	       Normal mode - Buttons - Hints - No tab to switch
+
+TODO: Feature: Message in phrase if database empty
+
 TODO: Feature: Add translation mode
 
 TODO: Feature: Use Phrase space as menu hints
@@ -25,6 +33,8 @@ TODO: Bug: If user types too fast, autocomplete can't keep up
       Idea: Set flag when user types - check flag before inserting text
       Progress: Autocomplete now fast enough, not a problem on test machine
       Test: Freeze and install on slow computer to check if still true
+
+TODO: Feature: Pro mode - no buttons + tab to switch widgets.
 
 DONE: Tests: Time difference between database and alt_database
       Result: Alt database was 100 times quicker and is now the default database.

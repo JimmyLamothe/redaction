@@ -59,6 +59,7 @@ class MainFrame(tk.Frame):
             self.right_button = self.create_right_button()
             self.up_button = self.create_up_button()
             self.down_button = self.create_down_button()
+        self.activate_get_mode()
         self.configure_gui()
         self.bind_event_handlers()
         
@@ -119,9 +120,13 @@ class MainFrame(tk.Frame):
         if config.get_mode() == 'get':
             return
         language_dict = config.get_language_dict()
+        self.key.config(
+            bg='#FFFFFF',
+            borderwidth=2
+            )
         self.phrase.config(
             bg='#F5F5F5',
-            borderwidth=4
+            borderwidth=3
             )        
         self.left_button.config(
             text=language_dict['new'],
@@ -138,6 +143,10 @@ class MainFrame(tk.Frame):
         if config.get_mode() == 'put':
             return
         language_dict = config.get_language_dict()
+        self.key.config(
+            bg='#F5F5F5',
+            borderwidth=3
+            )
         self.phrase.config(
             bg='#FFFFFF',
             borderwidth=2
@@ -263,6 +272,7 @@ class MainFrame(tk.Frame):
             column=0,
             sticky='nsew' #Stretches with window
         )
+        self.key.focus() #Focus on key widget
         
     def copy_phrase(self):
         """ Copy phrase text widget contents to clipboard | None -> None """ 
@@ -291,6 +301,9 @@ class MainFrame(tk.Frame):
     def handle_key_tab(self, event):
         """ Handle tab keypress in Key entry widget | None -> str """
         if self.key.confirm_suggestion():
+            self.key.update_suggestions()
+            self.key.get_suggestion() #Get next top suggestion from list
+            self.key.update_current()
             return 'break' #Interrupt standard tkinter event processing
         self.phrase.focus()
         return 'break'
@@ -349,6 +362,9 @@ class MainFrame(tk.Frame):
     
     def autocomplete(self, event, widget):
         """ Autocomplete for key and phrase | tk.Event, tk.Text -> None """
+        if event.keysym == 'Tab':
+            self.debug(0)
+            return 'break'
         if event.keysym in self.delete_keysyms: #If input was a delete character:
             self.debug(1)
             widget.update_current() #Update current user text
@@ -375,6 +391,8 @@ class MainFrame(tk.Frame):
                 self.debug(3.2)
                 #Confirm suggestion up to cursor position
                 widget.confirm_suggestion(cursor=widget.get_cursor())
+                widget.update_suggestions()
+                widget.get_suggestion() #Get next top suggestion from list
             widget.update_current()
             self.debug(3.0)
         else: #If suggestion active and text changed
@@ -392,7 +410,8 @@ class MainFrame(tk.Frame):
                 self.debug(4.2)
                 #Confirm suggestion up to cursor
                 widget.suggestion_text = widget.suggestion_text[1:]
-                widget.confirm_suggestion(widget.current_cursor) 
+                widget.update_display()
+                widget.confirm_suggestion(widget.get_cursor()) 
                 widget.update_suggestions()
                 widget.get_suggestion() #Get next top suggestion from list
             else:
@@ -409,10 +428,6 @@ class MainFrame(tk.Frame):
         if not success: #If no valid phrase with autocompleted Key input:
             self.phrase.clear() #Clear phrase display
      
-    def handle_phrase_input(self, event):
-        """ To be implemented - only prints input for now | tk.Event -> None """
-        print(event.char)
-        
     def bind_event_handlers(self):
         """ Binds all event handlers for all widgets | None -> None """
         #Copy and save bindings - active in all focus states
@@ -431,4 +446,4 @@ class MainFrame(tk.Frame):
         self.phrase.bind('<Tab>', self.handle_phrase_tab)
         self.phrase.bind('<BackSpace>', self.handle_phrase_backspace)
         self.phrase.bind('<ButtonRelease>', self.handle_phrase_button_release)
-        #self.phrase.bind('<KeyRelease>', self.handle_phrase_input)
+        self.phrase.bind('<KeyRelease>', self.handle_phrase_key_release)

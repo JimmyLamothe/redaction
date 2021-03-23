@@ -65,10 +65,13 @@ class Root(tk.Tk):
         #self.bind('<Command-c>', lambda x:print('Command-c'))
         #Use above as reference
         pass
+
+    def test_command(self, event):
+        print(event)
     
     def bind_events(self, test=False):
         """ Binds all application window events """
         self.bind('<Configure>', self.save_geometry)
         if test:
-            print_tracked_events(self) #Uncomment for testing
-        #self.test_keystrokes() #Uncomment for testing
+            print_tracked_events(self)
+            self.bind('<Control-t>', self.test_command)
