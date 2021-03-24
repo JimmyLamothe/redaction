@@ -52,7 +52,6 @@ class MainFrame(tk.Frame):
         self.key = Key(self)
         self.phrase_label = self.create_phrase_label()
         self.phrase = Phrase(self)
-        self.delete_keysyms = ['Delete','KP_Delete','BackSpace']
         if config.get_show_buttons():
             print('creating buttons')
             self.left_button = self.create_left_button()
@@ -296,46 +295,41 @@ class MainFrame(tk.Frame):
 
     def block_key_new_line(self, event):
         """ Prevent new lines in key text widget | None -> str """
+        print('blocking new line')
         return 'break' #Interrupt standard tkinter event processing
         
     def handle_key_tab(self, event):
-        """ Handle tab keypress in Key entry widget | None -> str """
-        if self.key.confirm_suggestion():
-            self.key.update_suggestions()
-            self.key.get_suggestion() #Get next top suggestion from list
-            self.key.update_current()
+        """ Handle tab keypress in Key text widget | None -> str """        
+        if self.key.handle_tab(event, return_value='bool'):
             return 'break' #Interrupt standard tkinter event processing
         self.phrase.focus()
         return 'break'
     
     def handle_phrase_tab(self, event):
         """ Handle tab keypress in Phrase text widget | None -> str """
+        if self.phrase.handle_tab(event, return_value='bool'):
+            return 'break' #Interrupt standard tkinter event processing
         self.key.focus()
         return('break') #Interrupt standard tkinter event processing
 
     def handle_key_backspace(self, event):
         """ Handles Backspace + modifier in Key widget | tk.Event -> str """
-        if event.state in [1,4,8,16]: #If any key modifier + backspace
-            self.key.delete_word() #Delete previous word in Key widget
-            return 'break' #Interrupt standard tkinter event processing
+        self.key.handle_backspace(event)
         
     def handle_phrase_backspace(self, event):
         """ Handles Backspace + modifier in Phrase widget | tk.Event -> str """
-        if event.state in [1,4,8,16]: #If any key modifier + backspace
-            self.phrase.delete_word() #Delete previous word in Key widget
-            return 'break' #Interrupt standard tkinter event processing
+        self.phrase.handle_backspace(event)
 
     def handle_key_button_release(self, event):
         """ Button release manager for key widget | tk.Event -> None """
-        if self.key.suggestion_text: #If suggestion displayed
-            if self.key.cursor_moved() == 'LEFT': #If cursor moved left
-                self.key.ignore_suggestion() #Delete suggestion text
-            elif self.key.cursor_moved() == 'RIGHT': #If cursor moved right
-                #Confirm suggestion up to cursor position
-                self.key.confirm_suggestion(cursor=self.key.get_cursor())
-
+        self.key.handle_button_release(event)
+        
     def handle_phrase_button_release(self, event):
-        self.activate_put_mode()
+        if not config.get_mode() == 'put':
+            self.activate_put_mode()
+            return
+        else:
+            print('TO BE IMPLEMENTED')
 
     def debug(self, number):
         if not config.get_debug():
@@ -353,74 +347,26 @@ class MainFrame(tk.Frame):
         """ Key release manager for key widget | tk.Event -> None """
         #No autocomplete for key widget in put mode
         if not config.get_mode() == 'put':
-            self.autocomplete(event, self.key)
+            self.key_autocomplete(event)
 
     def handle_phrase_key_release(self, event):
         #No autocomplete for phrase widget in get mode
         if not config.get_mode() == 'get':
-            self.autocomplete(event, self.phrase)
+            self.phrase_autocomplete(event, self.phrase)
     
-    def autocomplete(self, event, widget):
-        """ Autocomplete for key and phrase | tk.Event, tk.Text -> None """
-        if event.keysym == 'Tab':
-            self.debug(0)
-            return 'break'
-        if event.keysym in self.delete_keysyms: #If input was a delete character:
-            self.debug(1)
-            widget.update_current() #Update current user text
-            if widget.suggestion_text:
-                widget.ignore_suggestion() #Delete suggestions and update display
-            else:
-                widget.reset_suggestions() #Delete suggestions
-            self.debug(1.0)
-        elif not widget.suggestion_text: #If no suggestion displayed
-            self.debug(2)
-            if widget.text_changed(): #If input received
-                self.debug(2.1)
-                widget.update_current()
-                if widget.cursor_at_end(): #If cursor at end
-                    self.debug(2.11)
-                    widget.get_suggestion() #Get suggestion
-            self.debug(2.0)
-        elif not widget.text_changed(): #If no new input char
-            self.debug(3)
-            if widget.cursor_moved() == 'LEFT': #If cursor moved left
-                self.debug(3.1)
-                widget.ignore_suggestion() #Delete suggestion text
-            elif widget.cursor_moved() == 'RIGHT': #If cursor moved right
-                self.debug(3.2)
-                #Confirm suggestion up to cursor position
-                widget.confirm_suggestion(cursor=widget.get_cursor())
-                widget.update_suggestions()
-                widget.get_suggestion() #Get next top suggestion from list
-            widget.update_current()
-            self.debug(3.0)
-        else: #If suggestion active and text changed
-            self.debug(4)
-            current_input = widget.get_difference() #Get new user input
-            widget.update_current()
-            print(f'current_input = {current_input}')
-            print(f'len(current_input) = {len(current_input)}')
-            if not len(current_input) == 1: #If user input more than one char
-                self.debug(4.1)
-                widget.ignore_suggestion() #Delete suggestion text
-                #widget.update_current()
-            #If input char was next char in suggestion
-            elif current_input == widget.suggestion_text[0]:
-                self.debug(4.2)
-                #Confirm suggestion up to cursor
-                widget.suggestion_text = widget.suggestion_text[1:]
-                widget.update_display()
-                widget.confirm_suggestion(widget.get_cursor()) 
-                widget.update_suggestions()
-                widget.get_suggestion() #Get next top suggestion from list
-            else:
-                self.debug(4.3)
-                widget.ignore_suggestion() #Delete suggestion text
-                #widget.update_current()
-                widget.get_suggestion() #Get new suggestions
-            self.debug(4.0)
+    def key_autocomplete(self, event):
+        """ Autocomplete key and suggest phrase | tk.Event -> None """
+        self.key.autocomplete(event)
         self.suggest_phrase()
+
+    def get_saved_keys():
+        """ TO BE IMPLEMENTED """
+        pass
+        
+    def phrase_autocomplete(self, event):
+        """ Autocomplete phrase and get saved keys | tk.Event -> None """
+        self.phrase.autocomplete(event)
+        self.get_saved_keys()
         
     def suggest_phrase(self):
         key_list = self.key.get_display_key_list() #Includes suggestion if any

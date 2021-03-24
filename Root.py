@@ -73,5 +73,10 @@ class Root(tk.Tk):
         """ Binds all application window events """
         self.bind('<Configure>', self.save_geometry)
         if test:
-            print_tracked_events(self)
-            self.bind('<Control-t>', self.test_command)
+            #print_tracked_events(self)
+            self.bind('<Control-x>', self.test_command)
+            self.bind('<Command-x>', self.test_command)
+            self.bind('x', self.test_command)
+            self.bind('<Delete>', self.test_command)
+            self.bind('<BackSpace>', self.test_command)
+            #self.bind('<KP_Delete>', self.test_command)

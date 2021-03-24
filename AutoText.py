@@ -7,7 +7,8 @@ class AutoText(tk.Text):
             master=master, #MainFrame object
             **kwargs
         )
-
+        self.DELETE_KEYSYMS = ['Delete','KP_Delete','BackSpace']
+        self.DELETE_KEYCODES = [458872, 458776]
         self.current_text = '' #Actual text input by user
         self.current_cursor = None #Current tracked cursor position
         self.suggestion_text = '' #Current autocomplete string
@@ -73,9 +74,17 @@ class AutoText(tk.Text):
         self.set_cursor(self.current_cursor)
         self.debug('update_display', out=True)
 
+    def search_forwards(self, pattern, stopindex=tk.END):
+        """ Get next start position of string pattern | str -> None """
+        return self.search(pattern, 'insert', forwards=True, stopindex=stopindex)
+
+    def search_backwards(self, pattern, stopindex='1.0'):
+        """ Get previous start position of string pattern | str -> None """
+        return self.search(pattern, 'insert', backwards=True, stopindex=stopindex)
+    
     def delete_word(self):
         """ Delete prior characters until previous space or start | None -> None """
-        start = self.search(' ', 'insert', backwards=True)
+        start = self.search_backwards(' ')
         if not start:
             start = '1.0'
         end = self.index(tk.INSERT)
@@ -109,8 +118,8 @@ class AutoText(tk.Text):
 
     def get_suggestion(self):
         """ Complete current key input with valid keys from db | None -> None """
-        print('get_suggestion must be overridden by subclass')
-        raise NotImplementedError
+        error_message = 'get_suggestion must be overridden by subclass'
+        raise NotImplementedError(error_message)
 
     def update_suggestions(self):
         """ Removes impossible suggestions as user types | None -> None """
@@ -140,7 +149,7 @@ class AutoText(tk.Text):
             print('no suggestion text')
             return False #For tab autocomplete
         if not cursor:
-            cursor = self.index('end')
+            cursor = self.index('end-1c')
         start = self.current_cursor
         print(f'start: {start}')
         print(f'cursor: {cursor}')
@@ -152,3 +161,124 @@ class AutoText(tk.Text):
         self.update_display()
         self.debug('confirm_suggestion', out=True)
         return True #For tab autocomplete
+
+    def autocomplete(self, event):
+        """ Autocomplete logic | tk.Event -> None """
+        if event.keysym == 'Tab':
+            self.debug(0)
+            return 'break'
+        #If input was a delete command:
+        if (event.keysym in self.DELETE_KEYSYMS) or (event.keycode in
+                                                     self.DELETE_KEYCODES):
+            self.debug(1)
+            self.update_current() #Update current user text
+            if self.suggestion_text:
+                self.ignore_suggestion() #Delete suggestions and update display
+            else:
+                self.reset_suggestions() #Delete suggestions
+            self.debug(1.0)
+        elif not self.suggestion_text: #If no suggestion displayed
+            self.debug(2)
+            if self.text_changed(): #If input received
+                self.debug(2.1)
+                self.update_current()
+                if self.cursor_at_end(): #If cursor at end
+                    self.debug(2.11)
+                    self.get_suggestion() #Get suggestion
+            self.debug(2.0)
+        elif not self.text_changed(): #If no new input char
+            self.debug(3)
+            if self.cursor_moved() == 'LEFT': #If cursor moved left
+                self.debug(3.1)
+                self.ignore_suggestion() #Delete suggestion text
+            elif self.cursor_moved() == 'RIGHT': #If cursor moved right
+                self.debug(3.2)
+                #Confirm suggestion up to cursor position
+                self.confirm_suggestion(cursor=self.get_cursor())
+                self.update_suggestions()
+                self.get_suggestion() #Get next top suggestion from list
+            self.update_current()
+            self.debug(3.0)
+        else: #If suggestion active and text changed
+            self.debug(4)
+            current_input = self.get_difference() #Get new user input
+            self.update_current()
+            print(f'current_input = {current_input}')
+            print(f'len(current_input) = {len(current_input)}')
+            if not len(current_input) == 1: #If user input more than one char
+                self.debug(4.1)
+                self.ignore_suggestion() #Delete suggestion text
+            #If input char was next char in suggestion
+            elif current_input == self.suggestion_text[0]:
+                self.debug(4.2)
+                #Confirm suggestion up to cursor
+                self.suggestion_text = self.suggestion_text[1:]
+                self.update_display()
+                self.confirm_suggestion(self.get_cursor()) 
+                self.update_suggestions()
+                self.get_suggestion() #Get next top suggestion from list
+            else:
+                self.debug(4.3)
+                self.ignore_suggestion() #Delete suggestion text
+                self.get_suggestion() #Get new suggestions
+            self.debug(4.0)
+
+    def handle_button_release(self, event):
+        """ Autocompletion on mouse button release | tk.Event -> None """
+        if self.suggestion_text: #If suggestion displayed
+            try: #If text was selected
+                start = self.index(tk.SEL_FIRST)
+                end = self.index(tk.SEL_LAST)
+                self.confirm_suggestion(cursor=end) #Confirm selected text if any
+                self.tag_remove('sel', '1.0', tk.END)
+                self.tag_add('sel', start, end)
+            except tk.TclError: #If no text was selected
+                pass
+            if self.cursor_moved() == 'LEFT': #If cursor moved left
+                self.ignore_suggestion() #Delete suggestion text
+            elif self.cursor_moved() == 'RIGHT': #If cursor moved right
+                #Confirm suggestion up to cursor position
+                self.confirm_suggestion(cursor=self.get_cursor())
+
+    def handle_backspace(self, event):
+        """ Backspace + modifier deletes previous word | tk.Event -> str """
+        if event.state in [1,4,8,16]: #If any key modifier + backspace
+            self.delete_word() #Delete previous word in Key widget
+            return 'break' #Interrupt standard tkinter event processing
+
+    def handle_tab(self, event, return_value='break'):
+        """ Tab confirms current suggestion | tk.Event -> str 
+
+        return_value can be used to return True if suggestion was confirmed
+        or False if it wasn't. This lets you handle the tab key differently
+        in each circumstance. By default, it returns 'break' to stop the standard
+        tkinter processing for the tab key.
+        """
+        if return_value not in ['break', 'bool']:
+            error_message = 'return_value must be the string "break"'
+            error_message += 'or the string "bool"'
+            raise ValueError(error_message) 
+        if self.confirm_suggestion():
+            self.update_suggestions()
+            self.get_suggestion() #Get next top suggestion from list
+            self.update_current()
+            if return_value == 'break':
+                return 'break'
+            return True
+        if return_value == 'break':
+            return 'break'
+        return False
+
+    def debug(self, name, out=False):
+        """ Test function to debug autocomplete logic | optional:str -> None """
+        print('')
+        if not out:
+            print(f'Inside: {name}')
+        print(f'current_text = {self.current_text}')
+        print(f'current_cursor = {self.current_cursor}')
+        print(f'display_text = {self.get_contents()}')
+        print(f'display_cursor = {self.get_cursor()}')
+        print(f'suggestion_text = {self.suggestion_text}')
+        print(f'suggestion_list = {self.suggestion_list}')
+        if out:
+            print(f'Leaving: {name}')

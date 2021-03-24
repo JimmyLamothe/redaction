@@ -98,17 +98,16 @@ class Key(AutoText):
         self.debug('get_suggestion', out=True)
 
     def debug(self, name, out=False):
-        """ Test function to debug autocomplete logic | optional:str -> None """
         if not config.config_dict['debug']:
             return
-        print('')
-        if not out:
-            print(f'Inside: {name}')
-        print(f'current_text = {self.current_text}')
-        print(f'current_cursor = {self.current_cursor}')
-        print(f'display_text = {self.get_contents()}')
-        print(f'display_cursor = {self.get_cursor()}')
-        print(f'suggestion_text = {self.suggestion_text}')
-        print(f'suggestion_list = {self.suggestion_list}')
-        if out:
-            print(f'Leaving: {name}')
+        super().debug(name, out=out)
+
+"""
+    def get_contents(self):
+        print('replacing newlines')
+        contents = super().get_contents()
+        print('before', contents)
+        contents = contents.replace('\n', ' ').replace('\r', ' ')
+        print('after', contents)
+        return contents
+"""        

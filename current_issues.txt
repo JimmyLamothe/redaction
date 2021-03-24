@@ -1,6 +1,7 @@
-TODO: Concept: Entry mode vs Retrieve mode
+TODO: Concept: Get mode vs Put mode
       Problem: Autocomplete must work differently depending on if you want
-      	       to add an entry or get an entry
+      	       to add an entry or get an entry - Implementation in progress
+      Idea:    Click twice on key to return to get mode
 
 TODO: Refactor: All autocomplete functionality in single AutoText class
       		inheriting from tk.Text
