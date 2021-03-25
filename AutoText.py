@@ -18,7 +18,11 @@ class AutoText(tk.Text):
     def get_contents(self):
         """ Return text contents of widget | None -> str """
         return self.get('1.0', tk.END)[:-1] #Remove carriage return
-        
+
+    def set_contents(self, contents):
+        self.clear()
+        self.insert('1.0', contents)
+    
     def get_cursor(self):
         """ Get index value of current cursor position | None -> int """
         #print(f'\nGetting cursor at: {self.index(tk.INSERT)}')
@@ -109,11 +113,12 @@ class AutoText(tk.Text):
         return self.get_contents() != self.current_text
         
     def get_difference(self):
-        """ Gets lastest user input | None -> str """
+        """ Gets latest user input | None -> str """
         display_text = self.get_contents()
         text = display_text[len(self.current_text):] #Remove current text
         if self.suggestion_text: #If suggestion displayed
             text = text[:-len(self.suggestion_text)] #Remove suggestion text
+        print(f'LATEST INPUT: {text}')
         return text #Remaining characters is the current input
 
     def get_suggestion(self):

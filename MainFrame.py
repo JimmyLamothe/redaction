@@ -329,7 +329,7 @@ class MainFrame(tk.Frame):
             self.activate_put_mode()
             return
         else:
-            print('TO BE IMPLEMENTED')
+            self.phrase.handle_button_release(event)
 
     def debug(self, number):
         if not config.get_debug():
@@ -350,23 +350,19 @@ class MainFrame(tk.Frame):
             self.key_autocomplete(event)
 
     def handle_phrase_key_release(self, event):
-        #No autocomplete for phrase widget in get mode
-        if not config.get_mode() == 'get':
-            self.phrase_autocomplete(event, self.phrase)
+        """ Autocomplete phrase and display related keys | tk.Event -> None """
+        self.phrase_autocomplete(event)
     
     def key_autocomplete(self, event):
         """ Autocomplete key and suggest phrase | tk.Event -> None """
         self.key.autocomplete(event)
-        self.suggest_phrase()
-
-    def get_saved_keys():
-        """ TO BE IMPLEMENTED """
-        pass
+        self.suggest_phrase()        
         
     def phrase_autocomplete(self, event):
         """ Autocomplete phrase and get saved keys | tk.Event -> None """
         self.phrase.autocomplete(event)
-        self.get_saved_keys()
+        saved_keys = self.phrase.get_saved_keys()
+        self.key.set_contents(saved_keys)
         
     def suggest_phrase(self):
         key_list = self.key.get_display_key_list() #Includes suggestion if any

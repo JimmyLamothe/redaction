@@ -20,13 +20,6 @@ TODO: Feature: Undo and Redo
 
 TODO: Tests: Check if key_release or key_press events are better to catch.
 
-TODO: Bug: Drag-select isn't handled by autocomplete
-      	   Many small details to fix with mouse cursor changes
-
-TODO: Refactor: Split handle_key_key_release into multiple functions.
-      		Rename to something making it clear it handles autocomplete.
-		Take a widget as argument and handle both phrase and key.
-
 TODO: Bug: Alt_database - Fix repeated columns on initial creation
       Progress: Check if still a problem
 
@@ -34,6 +27,9 @@ TODO: Bug: If user types too fast, autocomplete can't keep up
       Idea: Set flag when user types - check flag before inserting text
       Progress: Autocomplete now fast enough, not a problem on test machine
       Test: Freeze and install on slow computer to check if still true
+
+TODO: Bug: If user copy pastes something in the key widget, it can include
+      	   line breaks.
 
 TODO: Feature: Pro mode - no buttons + tab to switch widgets.
 
@@ -57,8 +53,16 @@ DONE: Bug: Autocomplete - previous_cursor in key.compare_states won't work if us
 
 DONE: Bug: Saving empty phrase should be impossible
 
+DONE: Bug: Drag-select isn't handled by autocomplete
+      	   Many small details to fix with mouse cursor changes
+
 IGNORED: Refactor: Convert database to class?
 	 Reason: Works fine as is, no reason to use a class here
 
 IGNORED: Tests: Time difference between Pandas and SQLite
 	 Reason: For now, speed is plenty sufficient as is. Revisit if needed
+
+CHANGED: Refactor: Split handle_key_key_release into multiple functions.
+      		Rename to something making it clear it handles autocomplete.
+		Take a widget as argument and handle both phrase and key.
+	 Reason: All functionality reworked and moved to AutoText class

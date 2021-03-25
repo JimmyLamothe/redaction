@@ -44,7 +44,7 @@ class Phrase(AutoText):
     """
     
     def __init__(self, master):
-        tk.Text.__init__(
+        AutoText.__init__(
             self,
             master=master, #MainFrame object
             relief=tk.RIDGE,
@@ -110,17 +110,15 @@ class Phrase(AutoText):
             return False
 
     def get_suggestion(self):
-        """ Complete current input with valid phrase from db | None -> None
-
-        TO BE IMPLEMENTED
-        """
+        """ Complete current input with valid phrase from db | None -> None """
         self.debug('get_suggestion')
-        partial_phrase = self.get_contents() #Get partial phrase
-        if self.suggestion_list:
+        partial_phrase = self.current_text #Get partial phrase
+        print(f'partial_phrase: {partial_phrase}, len: {len(partial_phrase)}')
+        if self.suggestion_list: #If suggestion list exists, keep it
             suggestion_list = self.suggestion_list
-        else:
-            suggestion_list = ['INSERT DB METHOD HERE'] #All valid possible phrase
-            suggestion_list = [s for s in suggestion_list if not s == partial_key]
+        else: #Otherwise get all phrases starting with partial_phrase
+            suggestion_list = db.valid_phrases(partial_phrase)
+            suggestion_list = [s for s in suggestion_list if not s == partial_phrase]
         print('suggestion_list', suggestion_list)
         if suggestion_list: #If current input can be completed with a valid phrase: 
             suggestion = suggestion_list[0] #TODO: Rank suggestions
@@ -130,6 +128,12 @@ class Phrase(AutoText):
             self.suggestion_list = suggestion_list
             self.update_display()
         self.debug('get_suggestion', out=True)
+
+    def get_saved_keys(self):
+        """ Get saved keys if any for current displayed phrase | None -> None """
+        phrase = self.get_contents()
+        saved_keys = db.saved_keys(phrase)
+        return saved_keys
         
     def debug(self, name, out=False):
         if not config.config_dict['debug']:

@@ -101,13 +101,3 @@ class Key(AutoText):
         if not config.config_dict['debug']:
             return
         super().debug(name, out=out)
-
-"""
-    def get_contents(self):
-        print('replacing newlines')
-        contents = super().get_contents()
-        print('before', contents)
-        contents = contents.replace('\n', ' ').replace('\r', ' ')
-        print('after', contents)
-        return contents
-"""        

@@ -99,6 +99,20 @@ def valid_keys(partial_key):
         return list(db.columns[mask])
     return []
 
+def valid_phrases(partial_phrase):
+    """ Get list of db phrases starting with specific string | str -> list(str) """
+    if partial_phrase:
+        return list(db.index[db.index.str.startswith(partial_phrase)])
+    return []
+
+def saved_keys(phrase):
+    """ Get list of db keys for specific phrase | None -> list(str) """
+    try:
+        row = db.loc[phrase, :]
+        return list(row[row==True].index)
+    except KeyError:
+        return []
+
 def get_words(word_list, minimum, maximum):
     """ Get random words from word list | list(str), int, int -> list(str) """
     total = random.randint(minimum, maximum) #Total words to return
