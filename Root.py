@@ -5,6 +5,7 @@ Classes: Root
 """
 
 import tkinter as tk
+from tkinter import filedialog
 import config
 from MainFrame import MainFrame
 from Menus import MenuBar
@@ -33,7 +34,9 @@ class Root(tk.Tk):
         self.title(config.get_language_dict()['title']) #Application name
         self.set_geometry()
         self.bind_events()
-        
+        if not config.get_db_path():
+            config.set_db_path(db_path=get_default_dir())
+            
     def redraw(self):
         """ Redraws the application window using current config settings """
         config.save_config()
@@ -74,9 +77,7 @@ class Root(tk.Tk):
         self.bind('<Configure>', self.save_geometry)
         if test:
             #print_tracked_events(self)
-            self.bind('<Control-x>', self.test_command)
-            self.bind('<Command-x>', self.test_command)
-            self.bind('x', self.test_command)
-            self.bind('<Delete>', self.test_command)
-            self.bind('<BackSpace>', self.test_command)
-            #self.bind('<KP_Delete>', self.test_command)
+            #self.bind('<<MenuSelect>>', self.test_command)
+            self.menu_bar.bind('<<MenuSelect>>', self.test_command)
+            #self.menu_bar.option_menu.bind('<<MenuSelect>>', self.test_command)
+            #self.menu_bar.option_menu.bind('<<MenuSelect>>', self.test_command)

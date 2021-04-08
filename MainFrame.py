@@ -59,8 +59,10 @@ class MainFrame(tk.Frame):
             self.up_button = self.create_up_button()
             self.down_button = self.create_down_button()
         self.activate_get_mode()
+        self.current_focus = 'key'
         self.configure_gui()
         self.bind_event_handlers()
+        
         
     def create_key_label(self):
         """ Creates a label for the key entry widget | None -> tk.Label """
@@ -126,15 +128,16 @@ class MainFrame(tk.Frame):
         self.phrase.config(
             bg='#F5F5F5',
             borderwidth=3
-            )        
-        self.left_button.config(
-            text=language_dict['new'],
             )
-        self.right_button.config(
-            text=language_dict['copy'],
-            command=self.copy_phrase
+        if config.get_show_buttons():
+            self.left_button.config(
+                text=language_dict['new'],
             )
-        self.key.focus()
+            self.right_button.config(
+                text=language_dict['copy'],
+                command=self.copy_phrase
+            )
+            self.key.focus()
         config.set_mode('get')
 
     def activate_put_mode(self):
@@ -150,13 +153,14 @@ class MainFrame(tk.Frame):
             bg='#FFFFFF',
             borderwidth=2
             )
-        self.left_button.config(
-            text=language_dict['cancel'],
+        if config.get_show_buttons():
+            self.left_button.config(
+                text=language_dict['cancel'],
             )
-        self.right_button.config(
-            text=language_dict['save'],
-            command=self.save_entry
-        )
+            self.right_button.config(
+                text=language_dict['save'],
+                command=self.save_entry
+            )
         self.phrase.focus()
         config.set_mode('put')
     
@@ -303,6 +307,7 @@ class MainFrame(tk.Frame):
         if self.key.handle_tab(event, return_value='bool'):
             return 'break' #Interrupt standard tkinter event processing
         self.phrase.focus()
+        self.current_focus = 'phrase'
         return 'break'
     
     def handle_phrase_tab(self, event):
@@ -310,6 +315,7 @@ class MainFrame(tk.Frame):
         if self.phrase.handle_tab(event, return_value='bool'):
             return 'break' #Interrupt standard tkinter event processing
         self.key.focus()
+        self.current_focus = 'key'
         return('break') #Interrupt standard tkinter event processing
 
     def handle_key_backspace(self, event):
@@ -321,10 +327,39 @@ class MainFrame(tk.Frame):
         self.phrase.handle_backspace(event)
 
     def handle_key_button_release(self, event):
-        """ Button release manager for key widget | tk.Event -> None """
+        """ Button release manager for key widget | tk.Event -> None 
+        
+        When in put mode, switch to get mode if user clicks twice
+        on key widget while text field is empty.
+        """
+        contents = self.key.get_contents()
+        if config.get_mode() == 'get':
+            print('get')
+            self.current_focus = 'key' #For safety, should already be true
+        elif self.current_focus == 'key+': #Second click while empty
+            print('key+')
+            if contents == '':
+                print('empty')
+                self.activate_get_mode() #Switch to get mode
+            self.current_focus = 'key'
+        elif contents == '':
+            print('key+ & empty')
+            self.key.config(
+                bg='#FFFFFF',
+                borderwidth=2
+                )
+            self.current_focus = 'key+' #First click while empty
+        else:
+            print('key')
+            self.key.config(
+                bg='#FFFFFF',
+                borderwidth=2
+                )
+            self.current_focus = 'key'
         self.key.handle_button_release(event)
         
     def handle_phrase_button_release(self, event):
+        self.current_focus = 'phrase'
         if not config.get_mode() == 'put':
             self.activate_put_mode()
             return
@@ -369,7 +404,10 @@ class MainFrame(tk.Frame):
         success = self.phrase.display_phrase(key_list) #Display top valid phrase
         if not success: #If no valid phrase with autocompleted Key input:
             self.phrase.clear() #Clear phrase display
-     
+
+    def display_hint(self, event):
+        pass
+
     def bind_event_handlers(self):
         """ Binds all event handlers for all widgets | None -> None """
         #Copy and save bindings - active in all focus states
@@ -377,6 +415,12 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
+        #self.master.bind('<Command-z>', lambda event: db.undo())
+        #self.master.bind('<Control-z>', lambda event: db.undo())
+        #self.master.bind('<Control-y>', lambda event: db.redo())
+        #self.master.bind('<Command-y>', lambda event: db.redo())
+        #self.master.bind('<Control-Shift-z>', lambda event: db.redo())
+        #self.master.bind('<Command-Shift-z>', lambda event: db.redo())
         self.master.bind('<Escape>', lambda event: config.change_mode())
         #Key bindings - active when focus on Key entry widget
         self.key.bind('<Return>', self.block_key_new_line)

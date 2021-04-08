@@ -30,8 +30,10 @@ Functions:
 
 import atexit
 import shutil
+import pathlib
 import json
 from json.decoder import JSONDecodeError
+from utilities import get_default_dir
 
 #Default configuration on first execution or config reset
 DEFAULT_CONFIG = {
@@ -42,6 +44,7 @@ DEFAULT_CONFIG = {
     'language':'Français', #Current app interface language
     'mode':'put', #'get' entry from db or 'put' entry in db
     'db':'def', #Database implementation to use - only for testing
+    'db_path':None, #Database save path
     'debug':False #Print debug information - only for testing
 }
 
@@ -164,6 +167,8 @@ def get_language_dict():
 def show_buttons():
     """ Show buttons in GUI | None -> None """
     config_dict['show_buttons'] = True
+    active_objects['root'].destroy()
+    active_objects['root'].redraw()
     
 def hide_buttons():
     """ Hide buttons in GUI | None -> None """
@@ -182,6 +187,18 @@ def get_config():
 def get_languages():
     """ Alphabetical list of supported languages | None -> list(str) """
     return sorted([key for key in LANGUAGE_DICT])
+
+def set_db_path(db_path=None):
+        """ Set db save folder, ask user if necessary | Optional(str) -> None """
+        if not db_path:
+            db_path = get_default_dir()
+        config_dict['db_path'] = db_path
+
+def get_db_path():
+    """ Get database save path | None -> pathlib.Path """
+    if config_dict['db_path']:
+        return pathlib.Path(config_dict['db_path'])
+    return None
 
 def get_debug():
     """ Get debug bool from config_dict | None -> bool """

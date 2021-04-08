@@ -1,22 +1,16 @@
-TODO: Concept: Get mode vs Put mode
-      Problem: Autocomplete must work differently depending on if you want
-      	       to add an entry or get an entry - Implementation in progress
-      Idea:    Click twice on key to return to get mode
-
-TODO: Refactor: All autocomplete functionality in single AutoText class
-      		inheriting from tk.Text
+TODO: Bugs: Retest everything - Lots of bugs in normal use
 
 TODO: Feature: Pro mode - No buttons - No hints - Tab to switch
       	       Normal mode - Buttons - Hints - No tab to switch
 
 TODO: Feature: Message in phrase if database empty
 
+TODO: Feature: Tutorial
+
 TODO: Feature: Add translation mode
 
-TODO: Feature: Use Phrase space as menu hints
-
 TODO: Feature: Undo and Redo
-      Idea: Save states - figure out which variables need to be tracked
+      Idea: Save states for database
 
 TODO: Tests: Check if key_release or key_press events are better to catch.
 
@@ -30,8 +24,6 @@ TODO: Bug: If user types too fast, autocomplete can't keep up
 
 TODO: Bug: If user copy pastes something in the key widget, it can include
       	   line breaks.
-
-TODO: Feature: Pro mode - no buttons + tab to switch widgets.
 
 DONE: Tests: Time difference between database and alt_database
       Result: Alt database was 100 times quicker and is now the default database.
@@ -56,13 +48,28 @@ DONE: Bug: Saving empty phrase should be impossible
 DONE: Bug: Drag-select isn't handled by autocomplete
       	   Many small details to fix with mouse cursor changes
 
+DONE: Refactor: All autocomplete functionality in single AutoText class
+      		inheriting from tk.Text
+
+DONE: Concept: Get mode vs Put mode
+      Problem: Autocomplete must work differently depending on if you want
+      	       to add an entry or get an entry - Implementation in progress
+      Idea:    Click twice on key to return to get mode
+      Idea:    Key turn white on first click from put mode
+
+
+
 IGNORED: Refactor: Convert database to class?
 	 Reason: Works fine as is, no reason to use a class here
 
 IGNORED: Tests: Time difference between Pandas and SQLite
 	 Reason: For now, speed is plenty sufficient as is. Revisit if needed
 
+SKIPPED: Feature: Use Phrase space as menu hints
+	 Reason: Not possible with Tkinter - Change to different GUI?
+
 CHANGED: Refactor: Split handle_key_key_release into multiple functions.
-      		Rename to something making it clear it handles autocomplete.
-		Take a widget as argument and handle both phrase and key.
+      		   Rename to something making it clear it handles autocomplete.
+		   Take a widget as argument and handle both phrase and key.
 	 Reason: All functionality reworked and moved to AutoText class
+

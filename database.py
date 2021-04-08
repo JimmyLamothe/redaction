@@ -27,63 +27,74 @@ Functions:
 import random
 import pandas as pd
 import numpy as np
+import config
+from utilities import get_default_dir
+
+def get_full_db_path():
+    """ Returns full path to db including filename | None -> str """
+    folder = config.get_db_path()
+    file_name = 'key.pickle'
+    return folder / file_name
 
 def load_database():
     """ Loads database from disk if it exists | None -> pd.DataFrame or None """
     try:
-        db = pd.read_pickle('database/key.pickle')
+        db = pd.read_pickle(get_full_db_path())
         print('Loading saved key dataframe')
-        print(db.head())
+        print(db)
     except FileNotFoundError:
         print('No saved key dataframe')
         db = None
     return db
 
+db = load_database() #The application database (Pandas DataFrame)
+
 def get_phrase_series():
     """ Gets phrase Series from key DataFrame | None -> pd.Series """
     return db.index
 
-db = load_database() #The application database (Pandas DataFrame)
-
-def save(db):
+def save():
     """ Save contents of database to disk | db.DataFrame -> None """
-    db.to_pickle('database/key.pickle')
+    global db
+    db.to_pickle(get_full_db_path())
     
-def add_column_if_missing(name, db):
+def add_column_if_missing(name):
     """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
+    global db
     if not name in db.columns:
         db[name] = False
 
 def initialize_db(key_list, phrase):
     """ Create new database on first saved entry | list(str), str -> pd.DataFrame """
     print('Initializing DataFrame')
+    global db
     row_data = []
     for i in range(len(key_list)):
         row_data.append(True)
-    global db
     db = pd.DataFrame.from_dict({phrase:row_data},
                                     orient='index',
                                     columns=key_list)
-    return db
+    #get_full_db_path().touch(exists_ok=True) #Create file if necessary
+    save()
 
-def save_entry(key_list, phrase, db=db):
+def save_entry(key_list, phrase):
     """ Save new key/phrase combination to database | list(str), str -> None """
+    global db
     if not phrase: #To prevent accidental empty phrase entry
         return
     if db is None: #If first entry, initialize new database
-        db = initialize_db(key_list, phrase)
-        save_entry(key_list, phrase, db=db)
-        
+        initialize_db(key_list, phrase)
+        save_entry(key_list, phrase)
     else:
         print('Found DataFrame')
         if not key_list: #If no keys given
             db = db.drop(phrase) #Used to delete phrase from database
         db.loc[phrase] = False #Initialize row with all False 
         for key in key_list:
-            add_column_if_missing(key, db) #Add missing new keys 
+            add_column_if_missing(key) #Add missing new keys 
         db.loc[phrase, key_list] = True #Set keys in key_list to True
-        save(db)
-    
+        save()
+
 def get_phrase_list(key_list):
     """ Get list of valid phrases for a list of keys | list(str) -> list(str) """
     try:
@@ -140,6 +151,5 @@ def generate_test_db(language='fr', size=500):
     for i in range(size):
         print(f'Generating entry {i+1} of {size}')
         save_entry(generate_key_list(word_list),
-                   generate_phrase(word_list),
-                   db=db)
+                   generate_phrase(word_list))
     print(db)

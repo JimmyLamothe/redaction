@@ -12,7 +12,10 @@ Functions:
     delete_config()
 """
 
-import shutil, os
+import shutil
+import os
+import pathlib
+from appdirs import user_data_dir
 
 def backup_db():
     """ Create backup copy of database | None -> None """
@@ -64,3 +67,8 @@ def delete_config():
     """
     os.remove('config/config.json')
 
+def get_default_dir():
+    """ Gets default directory and creates it if necessary | None -> str """
+    default_dir = user_data_dir('KeyPhrase')
+    pathlib.Path(default_dir).mkdir(parents=True, exist_ok=True)
+    return user_data_dir('KeyPhrase')
