@@ -121,10 +121,6 @@ class MainFrame(tk.Frame):
         if config.get_mode() == 'get':
             return
         language_dict = config.get_language_dict()
-        self.key.config(
-            bg='#FFFFFF',
-            borderwidth=2
-            )
         self.phrase.config(
             bg='#F5F5F5',
             borderwidth=3
@@ -137,7 +133,9 @@ class MainFrame(tk.Frame):
                 text=language_dict['copy'],
                 command=self.copy_phrase
             )
-            self.key.focus()
+        self.key.focus()
+        self.key.clear()
+        self.phrase.clear()
         config.set_mode('get')
 
     def activate_put_mode(self):
@@ -145,10 +143,6 @@ class MainFrame(tk.Frame):
         if config.get_mode() == 'put':
             return
         language_dict = config.get_language_dict()
-        self.key.config(
-            bg='#F5F5F5',
-            borderwidth=3
-            )
         self.phrase.config(
             bg='#FFFFFF',
             borderwidth=2
@@ -162,6 +156,8 @@ class MainFrame(tk.Frame):
                 command=self.save_entry
             )
         self.phrase.focus()
+        #self.key.clear()
+        self.phrase.clear()
         config.set_mode('put')
     
     def create_up_button(self):
@@ -304,19 +300,13 @@ class MainFrame(tk.Frame):
         
     def handle_key_tab(self, event):
         """ Handle tab keypress in Key text widget | None -> str """        
-        if self.key.handle_tab(event, return_value='bool'):
-            return 'break' #Interrupt standard tkinter event processing
-        self.phrase.focus()
-        self.current_focus = 'phrase'
-        return 'break'
+        self.key.handle_tab(event)
+        return 'break' #Interrupt standard tkinter event processing
     
     def handle_phrase_tab(self, event):
         """ Handle tab keypress in Phrase text widget | None -> str """
-        if self.phrase.handle_tab(event, return_value='bool'):
-            return 'break' #Interrupt standard tkinter event processing
-        self.key.focus()
-        self.current_focus = 'key'
-        return('break') #Interrupt standard tkinter event processing
+        self.phrase.handle_tab(event)
+        return 'break' #Interrupt standard tkinter event processing
 
     def handle_key_backspace(self, event):
         """ Handles Backspace + modifier in Key widget | tk.Event -> str """
@@ -329,38 +319,31 @@ class MainFrame(tk.Frame):
     def handle_key_button_release(self, event):
         """ Button release manager for key widget | tk.Event -> None 
         
-        When in put mode, switch to get mode if user clicks twice
-        on key widget while text field is empty.
+        When in put mode, switch to get mode if both fields are empty.
+        When in put mode, confirm suggestion before switching focus to key
         """
-        contents = self.key.get_contents()
-        if config.get_mode() == 'get':
-            print('get')
-            self.current_focus = 'key' #For safety, should already be true
-        elif self.current_focus == 'key+': #Second click while empty
-            print('key+')
-            if contents == '':
-                print('empty')
-                self.activate_get_mode() #Switch to get mode
-            self.current_focus = 'key'
-        elif contents == '':
-            print('key+ & empty')
-            self.key.config(
-                bg='#FFFFFF',
-                borderwidth=2
-                )
-            self.current_focus = 'key+' #First click while empty
-        else:
-            print('key')
-            self.key.config(
-                bg='#FFFFFF',
-                borderwidth=2
-                )
-            self.current_focus = 'key'
+        self.current_focus = 'key'
+        key_contents = self.key.get_contents()
+        phrase_contents = self.phrase.get_contents()
+        if config.get_mode() == 'put':
+            self.phrase.confirm_suggestion()
+            if key_contents == '':
+                if phrase_contents == '':
+                    self.activate_get_mode() #Switch to get mode
+                else:
+                    self.key.config(
+                        bg='#FFFFFF',
+                        borderwidth=2
+                    )
         self.key.handle_button_release(event)
         
     def handle_phrase_button_release(self, event):
         self.current_focus = 'phrase'
-        if not config.get_mode() == 'put':
+        if self.phrase.get_selection(): #If user selected text in phrase box
+            self.key.confirm_suggestion()
+            return
+        elif not config.get_mode() == 'put':
+            self.key.ignore_suggestion()
             self.activate_put_mode()
             return
         else:
@@ -385,8 +368,13 @@ class MainFrame(tk.Frame):
             self.key_autocomplete(event)
 
     def handle_phrase_key_release(self, event):
-        """ Autocomplete phrase and display related keys | tk.Event -> None """
-        self.phrase_autocomplete(event)
+        """ Autocomplete phrase and display related keys | tk.Event -> None
+        
+        If key field is not empty, do not autocomplete to avoid deleting
+        user input
+        """
+        if not self.key.get_contents(): #If key field is empty
+            self.phrase_autocomplete(event)
     
     def key_autocomplete(self, event):
         """ Autocomplete key and suggest phrase | tk.Event -> None """

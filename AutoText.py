@@ -22,7 +22,13 @@ class AutoText(tk.Text):
     def set_contents(self, contents):
         self.clear()
         self.insert('1.0', contents)
-    
+
+    def get_selection(self):
+        try:
+            return self.get(tk.SEL_FIRST, tk.SEL_LAST)
+        except tk.TclError: #If no text selected
+            return None
+        
     def get_cursor(self):
         """ Get index value of current cursor position | None -> int """
         #print(f'\nGetting cursor at: {self.index(tk.INSERT)}')
@@ -251,28 +257,12 @@ class AutoText(tk.Text):
             self.delete_word() #Delete previous word in Key widget
             return 'break' #Interrupt standard tkinter event processing
 
-    def handle_tab(self, event, return_value='break'):
-        """ Tab confirms current suggestion | tk.Event -> str 
-
-        return_value can be used to return True if suggestion was confirmed
-        or False if it wasn't. This lets you handle the tab key differently
-        in each circumstance. By default, it returns 'break' to stop the standard
-        tkinter processing for the tab key.
-        """
-        if return_value not in ['break', 'bool']:
-            error_message = 'return_value must be the string "break"'
-            error_message += 'or the string "bool"'
-            raise ValueError(error_message) 
+    def handle_tab(self, event):
+        """ Tab confirms current suggestion | tk.Event -> str """
         if self.confirm_suggestion():
             self.update_suggestions()
             self.get_suggestion() #Get next top suggestion from list
             self.update_current()
-            if return_value == 'break':
-                return 'break'
-            return True
-        if return_value == 'break':
-            return 'break'
-        return False
 
     def debug(self, name, out=False):
         """ Test function to debug autocomplete logic | optional:str -> None """
