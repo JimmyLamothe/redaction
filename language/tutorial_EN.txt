@@ -1,0 +1,25 @@
+Welcome to KeyPhrase! Click anywhere to skip this tutorial. Click on the down button or press the down key to see the next hint.
+***
+KeyPhrase has two modes. Get mode lets you get saved phrases by typing keywords. Save mode lets you save new keyword and phrase combinations.
+
+To switch between modes, press the New or Cancel button in the bottom left. You can also press the escape key or simply click on the Key or Phrase box when it’s empty.
+***
+In Get mode, type your keywords in the Key box. The top matching phrase will appear in the Phrase box. Copy it to the clipboard with the copy button or with the usual keyboard shortcut (Ctrl-C or Command-C).
+
+If there is more than one matching phrase, navigate between them using the up and down buttons or the up and down keys.
+***
+In Save mode, type your phrase in the Phrase box and your keywords in the Keybox. Press the Save button or the keyboard shortcut (Ctrl-S or Command-S) to save this combination.
+
+You can switch from the Key box to the Phrase with the Tab key or with the mouse.
+***
+In Save mode, you can also modify the keywords assigned to a phrase by typing it in the phrase box (press tab key to autocomplete), changing the keywords and saving it as usual (Save button, Ctrl-S or Command-S).
+
+You can delete a phrase from memory by typing it in the phrase box, deleting all keywords, and pressing Save.
+***
+Autocompletion will suggest saved keywords as you type in Get mode. Press the tab key to accept the suggestion or keep typing to ignore it.
+
+In Phrase mode, autocompletion will suggest saved phrases instead. Again, use the tab key to accept the suggestion or keep typing to ignore it.
+***
+That's all there is to know! You can load this tutorial at any time by selecting "Load Tutorial" in the Help menu.
+
+You can also disable the startup hints by selecting "Disable Hints" in the Help menu.

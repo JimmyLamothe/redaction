@@ -47,6 +47,7 @@ class Phrase(AutoText):
         AutoText.__init__(
             self,
             master=master, #MainFrame object
+            wrap=tk.WORD,
             relief=tk.RIDGE,
             bg='#F5F5F5',#FFFFFF in put mode
             borderwidth=3, #2 in put mode
@@ -99,7 +100,7 @@ class Phrase(AutoText):
             self.display_current()
             
     def display_phrase(self, key_list):
-        """ Displays current phrase in self.active_list | None -> None """
+        """ Displays matching phrase using current keys  | None -> None """
         if self.create_list(key_list) == 'VALID KEY':
             #print('Active phrase list:', self.phrase.active_list) #Testing code
             self.clear()

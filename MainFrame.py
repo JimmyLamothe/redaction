@@ -62,6 +62,8 @@ class MainFrame(tk.Frame):
         self.current_focus = 'key'
         self.configure_gui()
         self.bind_event_handlers()
+        if config.get_show_tutorial():
+            self.load_tutorial()
         
         
     def create_key_label(self):
@@ -299,12 +301,20 @@ class MainFrame(tk.Frame):
         return 'break' #Interrupt standard tkinter event processing
         
     def handle_key_tab(self, event):
-        """ Handle tab keypress in Key text widget | None -> str """        
+        """ Handle tab keypress in Key text widget | None -> str """
+        if config.get_mode() == 'put':
+            if not self.key.suggestion_text:
+                self.phrase.focus()
+                return 'break'
         self.key.handle_tab(event)
         return 'break' #Interrupt standard tkinter event processing
     
     def handle_phrase_tab(self, event):
         """ Handle tab keypress in Phrase text widget | None -> str """
+        if config.get_mode() == 'put':
+            if not self.phrase.suggestion_text:
+                self.key.focus()
+                return 'break'
         self.phrase.handle_tab(event)
         return 'break' #Interrupt standard tkinter event processing
 
@@ -395,6 +405,14 @@ class MainFrame(tk.Frame):
 
     def display_hint(self, event):
         pass
+
+    def load_tutorial(self):
+        language_dict = config.get_language_dict()
+        with open(language_dict['tutorial'], 'r') as source:
+            tutorial = source.read().split('***\n')
+            self.phrase.active_list = tutorial
+            self.phrase.active_list_index = 0
+            self.phrase.display_current()
 
     def bind_event_handlers(self):
         """ Binds all event handlers for all widgets | None -> None """

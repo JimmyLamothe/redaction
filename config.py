@@ -45,6 +45,7 @@ DEFAULT_CONFIG = {
     'mode':'put', #'get' entry from db or 'put' entry in db
     'db':'def', #Database implementation to use - only for testing
     'db_path':None, #Database save path
+    'show_tutorial':True, #Show tutorial on startup
     'debug':False #Print debug information - only for testing
 }
 
@@ -61,7 +62,8 @@ FRENCH_DICT = {
     'hide_buttons':'Cacher les boutons',
     'options':'Options',
     'display':'Affichage',
-    'title':'Phrase/Clé'
+    'title':'Phrase/Clé',
+    'tutorial':'language/tutorial_FR.txt'
 }
 ENGLISH_DICT = {
     'key':'Key',
@@ -75,7 +77,8 @@ ENGLISH_DICT = {
     'hide_buttons':'Hide buttons',
     'options':'Options',
     'display':'Display',
-    'title':'Key/Phrase'
+    'title':'Key/Phrase',
+    'tutorial':'language/tutorial_EN.txt'
 }
 #Supported languages
 LANGUAGE_DICT = {
@@ -129,7 +132,11 @@ def redraw():
 def get_show_buttons():
     """ Get show_buttons bool from config_dict | None -> bool """
     return config_dict['show_buttons']
-    
+
+def get_show_tutorial():
+    """ Get shot_tutorial bool from config_dict | None -> bool """
+    return config_dict['show_tutorial']
+
 def get_mode():
     """ Get current mode from config_dict | None -> str """
     return config_dict['mode']

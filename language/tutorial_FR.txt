@@ -1,0 +1,25 @@
+Bienvenue à Phrase-Clé! Pour mettre fin au tutoriel, cliquez sur le texte. Passez d'une explication à l'autre avec les flèches du haut et du bas.
+***
+Phrase-Clé utitlise deux modes. Le mode Recherche permet de retrouver une phrase avec des mots clés. Le mode Enregistrer permet d'associer une nouvelle phrase à des mots clés.
+
+Pour passer d'un mode à l'autre, appuyez sur le bouton Nouveau ou Annuler, en bas à gauche. Vous pouvez aussi utiliser la touche d'échappement (ESC) ou cliquer dans l'autre zone de texte si elles sont vides.
+***
+En mode Recherche, tapez des mots clés dans la zone Clé. La meilleure phrase correspondante apparaîtra dans la zone Phrase. Copiez la dans le presse-papier avec le bouton Copier ou le raccourci habituel (Ctrl-C ou Commande-C, puis insérez-la dans le logiciel que vous utilisez pour écrire.
+
+S'il y a plus d'une phrase possible, passez d'une phrase à l'autre avec les flèches du haut et du bas.
+***
+En mode Enregistrer, entrez votre phrase dans la zone Phrase et vos mots clés dans la zone Clé. Cliquez sur le bouton Enregistrer ou utilisez le raccourci clavier (Ctrl-S ou Commande-S) pour mémoriser cette combinaison.
+
+Vous pouvez passer de la zone clé à la zone Phrase avec la touche Tab ou en utilisant la souris.
+***
+En mode Enregistrer, vous pouvez aussi modifier les mots clés associés à une phrase. Écrivez-la dans la zone Phrase, modifiez les mots clés dans la zone Clé et enregistrez-la (avee le bouton Enregistrer, Ctrl-S ou Commande-S).
+
+Pour effacer une phrase de la mémoire, écrivez-la dans la zone phrase, effacez tous les mots clés, et enregistrz-la de nouveau.
+***
+L'autocomplétion suggère des mots clés de la mémoire à mesure que vous tapez. Utilisez la touche Tab pour confirmer la suggestion, ou continuez à écrire pour l'ignorer.
+
+En mode Enregistrer, l'autocomplétion vous propose des phrases. Encore une fois, utilisez la touche Tab pour confirmer la suggestion ou continuez à écrire.
+***
+C'est tout ce qu'il faut savoir! Vous pouvez relire ce tutoriel quand vous voulez en sélectionnant "Voir le tutoriel" dans le menu d'Aide.
+
+Vous pouvez aussi désactiver les astuces en sélectionnant "Désactiver les astuces" dans le menu d'Aide
