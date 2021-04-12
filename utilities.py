@@ -19,3 +19,10 @@ def get_default_backup():
     backup_dir = default_dir / 'backup'
     backup_dir.mkdir(parents=True, exist_ok=True)
     return backup_dir
+
+def get_default_session():
+    """ Gets session backup directory and creates it if needed | None -> Path """
+    default_dir = get_default_dir()
+    session_dir = default_dir / 'session'
+    session_dir.mkdir(parents=True, exist_ok=True)
+    return session_dir

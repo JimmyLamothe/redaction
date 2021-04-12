@@ -40,7 +40,8 @@ class Root(tk.Tk):
             config.set_db_path()
         if not config.get_backup_path():
             config.set_backup_path()
-        backup.backup()
+        if not config.get_session_path():
+            config.set_session_path()
         
     def redraw(self):
         """ Redraws the application window using current config settings """

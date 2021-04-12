@@ -25,6 +25,7 @@ Functions:
 """
 
 import random
+import shutil
 import pandas as pd
 import numpy as np
 import config
@@ -37,10 +38,16 @@ def load_database():
         print(db)
     except FileNotFoundError:
         print('No saved key dataframe')
-        db = None
+        db = pd.DataFrame() #Initialize empty db
+        db.to_pickle(config.get_full_db_path()) 
     return db
 
 db = load_database() #The application database (Pandas DataFrame)
+
+def reload_database():
+    """ Reload db from disk - used for undo and redo """
+    global db
+    db = load_database()
 
 def get_phrase_series():
     """ Gets phrase Series from key DataFrame | None -> pd.Series """
@@ -58,8 +65,8 @@ def add_column_if_missing(name):
         db[name] = False
 
 def initialize_db(key_list, phrase):
-    """ Create new database on first saved entry | list(str), str -> pd.DataFrame """
-    print('Initializing DataFrame')
+    """ Create new database on first startup | list(str), str -> pd.DataFrame """
+    print('Initializing database')
     global db
     row_data = []
     for i in range(len(key_list)):
@@ -67,14 +74,14 @@ def initialize_db(key_list, phrase):
     db = pd.DataFrame.from_dict({phrase:row_data},
                                     orient='index',
                                     columns=key_list)
-    save()
+    db.to_pickle(config.get_full_db_path())
 
 def save_entry(key_list, phrase):
     """ Save new key/phrase combination to database | list(str), str -> None """
     global db
     if not phrase: #To prevent accidental empty phrase entry
         return
-    if db is None: #If first entry, initialize new database
+    if db.empty: #If first entry, initialize new database
         initialize_db(key_list, phrase)
         save_entry(key_list, phrase)
     else:
@@ -145,3 +152,62 @@ def generate_test_db(language='fr', size=500):
         save_entry(generate_key_list(word_list),
                    generate_phrase(word_list))
     print(db)
+
+#Paths of backup database saves for current session
+undo_db_list = []
+
+redo_db_list = []
+
+def generate_undo_filepath():
+    """ Generate filepath for undo file | None -> Path """
+    session_path = config.get_session_path()
+    name = 'undo_' + str(len(undo_db_list)) + '.pickle'
+    filepath = session_path / name
+    return filepath
+
+def prepare_undo():
+    """ Saves current db state to undo file and saves path | None -> None """
+    db_filepath = config.get_full_db_path()
+    filepath = generate_undo_filepath()
+    shutil.copy(db_filepath, filepath)
+    undo_db_list.append(filepath)
+
+def generate_redo_filepath():
+    """ Generate filepath for redo file | None -> Path """
+    session_path = config.get_session_path()
+    name = 'redo_' + str(len(redo_db_list)) + '.pickle'
+    filepath = session_path / name 
+    return filepath
+
+def prepare_redo():
+    """ Saves current db state to redo file and saves path | None -> None """
+    db_filepath = config.get_full_db_path()
+    filepath = generate_redo_filepath()
+    shutil.copy(db_filepath, filepath)
+    redo_db_list.append(filepath)
+    
+def undo():
+    """ Reverts previous database save command | None -> None """
+    if not undo_db_list: #If no previous saved state
+        return
+    #Part 1: Save current state to temp backup
+    prepare_redo()
+    #Part 2: Revert previous save command
+    db_filepath = config.get_full_db_path()
+    revert_filepath = undo_db_list[-1]
+    shutil.copy(revert_filepath, db_filepath)
+    undo_db_list.pop().unlink()
+    reload_database()
+    
+def redo():
+    """ Reverts previous undo call | None -> None """
+    if not redo_db_list: # If no undo in memory
+        return
+    #Part 1: Save current state to temp backup
+    prepare_undo()
+    #Part 2: Revert previous undo command
+    db_filepath = config.get_full_db_path()
+    revert_filepath = redo_db_list[-1]
+    shutil.copy(revert_filepath, db_filepath)
+    redo_db_list.pop().unlink()
+    reload_database()

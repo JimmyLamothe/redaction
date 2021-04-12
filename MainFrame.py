@@ -9,6 +9,7 @@ from Key import Key
 from Phrase import Phrase
 import config
 import database as db
+from backup import backup
 
 class MainFrame(tk.Frame):
     """ Implements the widget interface and logic.
@@ -64,7 +65,7 @@ class MainFrame(tk.Frame):
         self.bind_event_handlers()
         if config.get_show_tutorial():
             self.load_tutorial()
-        
+        backup()
         
     def create_key_label(self):
         """ Creates a label for the key entry widget | None -> tk.Label """
@@ -289,6 +290,7 @@ class MainFrame(tk.Frame):
         phrase = self.phrase.get_contents()
         print(phrase)
         #Save combination
+        db.prepare_undo()
         db.save_entry(key_list, phrase)
         print(db.db)
         #Clear widgets after save
@@ -421,12 +423,12 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
-        #self.master.bind('<Command-z>', lambda event: db.undo())
-        #self.master.bind('<Control-z>', lambda event: db.undo())
-        #self.master.bind('<Control-y>', lambda event: db.redo())
-        #self.master.bind('<Command-y>', lambda event: db.redo())
-        #self.master.bind('<Control-Shift-z>', lambda event: db.redo())
-        #self.master.bind('<Command-Shift-z>', lambda event: db.redo())
+        self.master.bind('<Command-z>', lambda event: db.undo())
+        self.master.bind('<Control-z>', lambda event: db.undo())
+        self.master.bind('<Control-y>', lambda event: db.redo())
+        self.master.bind('<Command-y>', lambda event: db.redo())
+        self.master.bind('<Control-Shift-z>', lambda event: db.redo())
+        self.master.bind('<Command-Shift-z>', lambda event: db.redo())
         self.master.bind('<Escape>', lambda event: config.change_mode())
         #Key bindings - active when focus on Key entry widget
         self.key.bind('<Return>', self.block_key_new_line)

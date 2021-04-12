@@ -34,7 +34,7 @@ import pathlib
 import json
 from json.decoder import JSONDecodeError
 from tkinter import filedialog
-from utilities import get_default_dir, get_default_backup
+from utilities import get_default_dir, get_default_backup, get_default_session
 
 #Default configuration on first execution or config reset
 DEFAULT_CONFIG = {
@@ -214,7 +214,7 @@ def get_full_db_path():
     return folder / file_name
 
 def set_backup_path(backup_path=None):
-    """ Sets backup directory, creating if necessary | optional:Path -> str """
+    """ Sets backup directory, creating if necessary | optional:Path -> None """
     if not backup_path:
         backup_path = get_default_backup()
     elif backup_path == 'ask':
@@ -222,11 +222,23 @@ def set_backup_path(backup_path=None):
     config_dict['backup_path'] = str(backup_path)
 
 def get_backup_path():
-    """ Get database backup path | None -> pathlib.Path """
+    """ Get database backup path | None -> Path """
     if config_dict['backup_path']:
         return pathlib.Path(config_dict['backup_path'])
     return None
+
+def set_session_path(session_path=None):
+    """ Sets session directory, creating if necessary | optional:Path -> None """
+    if not session_path:
+        session_path = get_default_session()
+    config_dict['session_path'] = str(session_path)
     
+def get_session_path():
+    """ Get path to session database save states | None -> Path """
+    if config_dict['session_path']:
+        return pathlib.Path(config_dict['session_path'])
+    return None
+
 def get_debug():
     """ Get debug bool from config_dict | None -> bool """
     return config_dict['debug']
@@ -236,3 +248,9 @@ def debug_mode():
     print(f'Before: {config_dict["debug"]}')
     config_dict['debug'] = not config_dict['debug']
     print(f'After: {config_dict["debug"]}')
+
+@atexit.register
+def clear_session():
+    session_path = get_session_path()
+    for f in session_path.iterdir():
+        f.unlink()

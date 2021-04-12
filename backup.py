@@ -2,13 +2,17 @@
 The backup module stores four backups of the database. One from the previous day,
 one from the previous week, one from the previous month, and one from the previous
 year. As new backups are made, previous ones are deleted.
+
+It also implements undo and redo functionality using temporary saved
+database states that are deleted at session end.
 """
 
+import atexit
 import shutil
 import json
+from pathlib import Path
 from datetime import date
 import config
-
 
 DEFAULT_DATES = {
     'day': None, #Time of last daily backup (1 day)
@@ -28,6 +32,7 @@ def load_backup_dates():
         backup_date_dict = DEFAULT_DATES
     return backup_date_dict
 
+#Dates of most recent daily, weekly, monthly and yearly backups
 backup_date_dict = load_backup_dates()
 
 def save_backup_dates():
@@ -37,19 +42,22 @@ def save_backup_dates():
         json.dump(backup_date_dict, date_file)
 
 def new_day():
+    """ Checks if 1 day has passed since last backup | None -> bool """
     if not backup_date_dict['day'] == date.today():
         return True
     return False
 
 def new_week():
+    """ Checks if 7 days have passed since last backup | None -> bool """
     if not backup_date_dict['week']:
         return True
     diff = date.today() - backup_date_dict['week']
-    if diff.days > 7:
+    if diff.days > 6:
         return True
     return False
 
 def new_month():
+    """ Checks if 30 days have passed since last backup | None -> bool """
     if not backup_date_dict['month']:
         return True
     diff = date.today() - backup_date_dict['month']
@@ -58,14 +66,16 @@ def new_month():
     return False
 
 def new_year():
+    """ Checks if 365 days have passed since last backup | None -> bool """
     if not backup_date_dict['year']:
         return True
     diff = date.today() - backup_date_dict['year']
-    if diff.days > 365:
+    if diff.days > 364:
         return True
     return False
 
 def daily_backup():
+    """ Performs daily backup | None -> None """
     print('daily backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
@@ -74,6 +84,7 @@ def daily_backup():
     shutil.copy(db_filepath, backup_filepath)
 
 def weekly_backup():
+    """ Performs weekly backup | None -> None """
     print('weekly backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
@@ -82,6 +93,7 @@ def weekly_backup():
     shutil.copy(db_filepath, backup_filepath)
 
 def monthly_backup():
+    """ Performs monthly backup | None -> None """
     print('monthly backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
@@ -90,6 +102,7 @@ def monthly_backup():
     shutil.copy(db_filepath, backup_filepath)
 
 def yearly_backup():
+    """ Performs yearly backup | None -> None """
     print('yearly backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
@@ -98,6 +111,7 @@ def yearly_backup():
     shutil.copy(db_filepath, backup_filepath)
     
 def backup():
+    """ Performs all backups if needed | None -> None """
     if new_day():
         daily_backup()
     if new_week():
@@ -106,4 +120,3 @@ def backup():
         monthly_backup()
     if new_year():
         yearly_backup()
-
