@@ -86,8 +86,8 @@ class OptionMenu(tk.Menu):
             command=config.debug_mode
         )
         self.add_command(
-            label='Temp 3',
-            command=self.temp
+            label='Set backup path',
+            command=partial(config.set_backup_path, 'ask')
         )
         self.add_command(
             label='Temp 4',

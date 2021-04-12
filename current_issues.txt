@@ -4,6 +4,9 @@ TODO: Feature: Pro mode - No buttons - No hints - Tab to switch
       	       Normal mode - Buttons - Hints - No tab to switch
 
 TODO: Feature: Tutorial - Hints on startup first 5 times - scroll with buttons
+      Progress: Working - Better exit needed
+
+TODO: Feature: Help - Help loads a tutorial type interface explaining menus, etc
 
 TODO: Feature: Add translation mode
 

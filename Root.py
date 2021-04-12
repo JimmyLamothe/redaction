@@ -7,9 +7,11 @@ Classes: Root
 import tkinter as tk
 from tkinter import filedialog
 import config
+import backup
 from MainFrame import MainFrame
 from Menus import MenuBar
 from commands import print_tracked_events
+
 
 class Root(tk.Tk):
     """ Main tkinter window
@@ -35,8 +37,11 @@ class Root(tk.Tk):
         self.set_geometry()
         self.bind_events()
         if not config.get_db_path():
-            config.set_db_path(db_path=get_default_dir())
-            
+            config.set_db_path()
+        if not config.get_backup_path():
+            config.set_backup_path()
+        backup.backup()
+        
     def redraw(self):
         """ Redraws the application window using current config settings """
         config.save_config()

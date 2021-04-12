@@ -33,7 +33,8 @@ import shutil
 import pathlib
 import json
 from json.decoder import JSONDecodeError
-from utilities import get_default_dir
+from tkinter import filedialog
+from utilities import get_default_dir, get_default_backup
 
 #Default configuration on first execution or config reset
 DEFAULT_CONFIG = {
@@ -100,6 +101,13 @@ def load_config():
     except (FileNotFoundError, ValueError):
         print('Loading default configuration:', DEFAULT_CONFIG)
         config_dict = DEFAULT_CONFIG
+    return config_dict
+
+#Current user application settings
+config_dict = load_config()
+
+def get_config():
+    """ Access config dict from outside module | None -> dict """
     return config_dict
 
 @atexit.register
@@ -183,23 +191,15 @@ def hide_buttons():
     active_objects['root'].destroy()
     active_objects['root'].redraw()
 
-#Current user application settings
-config_dict = load_config()
-
-def get_config():
-    """ Access config dict from outside module | None -> dict """
-    return config_dict
-
-
 def get_languages():
     """ Alphabetical list of supported languages | None -> list(str) """
     return sorted([key for key in LANGUAGE_DICT])
 
 def set_db_path(db_path=None):
-        """ Set db save folder, ask user if necessary | Optional(str) -> None """
-        if not db_path:
-            db_path = get_default_dir()
-        config_dict['db_path'] = db_path
+    """ Set db save folder, creating if necessary | optional:Path -> None """
+    if not db_path:
+        db_path = get_default_dir()
+    config_dict['db_path'] = str(db_path)
 
 def get_db_path():
     """ Get database save path | None -> pathlib.Path """
@@ -207,6 +207,26 @@ def get_db_path():
         return pathlib.Path(config_dict['db_path'])
     return None
 
+def get_full_db_path():
+    """ Returns full path to db including filename | None -> str """
+    folder = get_db_path()
+    file_name = 'key.pickle'
+    return folder / file_name
+
+def set_backup_path(backup_path=None):
+    """ Sets backup directory, creating if necessary | optional:Path -> str """
+    if not backup_path:
+        backup_path = get_default_backup()
+    elif backup_path == 'ask':
+        backup_path = filedialog.askdirectory()
+    config_dict['backup_path'] = str(backup_path)
+
+def get_backup_path():
+    """ Get database backup path | None -> pathlib.Path """
+    if config_dict['backup_path']:
+        return pathlib.Path(config_dict['backup_path'])
+    return None
+    
 def get_debug():
     """ Get debug bool from config_dict | None -> bool """
     return config_dict['debug']

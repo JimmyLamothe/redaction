@@ -28,18 +28,11 @@ import random
 import pandas as pd
 import numpy as np
 import config
-from utilities import get_default_dir
-
-def get_full_db_path():
-    """ Returns full path to db including filename | None -> str """
-    folder = config.get_db_path()
-    file_name = 'key.pickle'
-    return folder / file_name
 
 def load_database():
     """ Loads database from disk if it exists | None -> pd.DataFrame or None """
     try:
-        db = pd.read_pickle(get_full_db_path())
+        db = pd.read_pickle(config.get_full_db_path())
         print('Loading saved key dataframe')
         print(db)
     except FileNotFoundError:
@@ -56,7 +49,7 @@ def get_phrase_series():
 def save():
     """ Save contents of database to disk | db.DataFrame -> None """
     global db
-    db.to_pickle(get_full_db_path())
+    db.to_pickle(config.get_full_db_path())
     
 def add_column_if_missing(name):
     """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
@@ -74,7 +67,6 @@ def initialize_db(key_list, phrase):
     db = pd.DataFrame.from_dict({phrase:row_data},
                                     orient='index',
                                     columns=key_list)
-    #get_full_db_path().touch(exists_ok=True) #Create file if necessary
     save()
 
 def save_entry(key_list, phrase):
