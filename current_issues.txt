@@ -1,10 +1,8 @@
-TODO: Bugs: Retest Autocorrect - bugs in Put mode when suggestion in Key box
-      
 TODO: Feature: Pro mode - No buttons - No hints - Tab to switch
       	       Normal mode - Buttons - Hints - No tab to switch
 
 TODO: Feature: Tutorial - Hints on startup first 5 times - scroll with buttons
-      Progress: Working - Better exit needed
+      Progress: Working - Limit of times needed
 
 TODO: Feature: Help - Help loads a tutorial type interface explaining menus, etc
 
@@ -12,13 +10,7 @@ TODO: Refactoring: Move all user data to Application Support
 
 TODO: Feature: Add translation mode
 
-TODO: Feature: Undo and Redo
-      Progress: Clear autotext suggestions
-
 TODO: Tests: Check if key_release or key_press events are better to catch.
-
-TODO: Bug: Alt_database - Fix repeated columns on initial creation
-      Progress: Check if still a problem
 
 TODO: Bug: If user types too fast, autocomplete can't keep up
       Idea: Set flag when user types - check flag before inserting text
@@ -27,6 +19,19 @@ TODO: Bug: If user types too fast, autocomplete can't keep up
 
 TODO: Bug: If user copy pastes something in the key widget, it can include
       	   line breaks.
+
+DONE: Bug: Delete word interaction with spaces
+
+DONE: Feature: Undo and Redo
+      Progress: Clear autotext suggestions
+
+DONE: Feature: Up and down arrow functionality
+
+DONE: Bug: Alt_database - Fix repeated columns on initial creation
+      Progress: Check if still a problem
+
+
+DONE: Retest Autocorrect - bugs in Put mode when suggestion in Key box
 
 DONE: Tests: Time difference between database and alt_database
       Result: Alt database was 100 times quicker and is now the default database.

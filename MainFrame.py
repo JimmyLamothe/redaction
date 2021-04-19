@@ -1,4 +1,4 @@
-""" Implements the MainFrame class 
+""" Implements the MainFrame class
 
 Classes: MainFrame
 """
@@ -8,7 +8,6 @@ from PIL import ImageTk, Image
 from Key import Key
 from Phrase import Phrase
 import config
-import database as db
 from backup import backup
 
 class MainFrame(tk.Frame):
@@ -49,6 +48,7 @@ class MainFrame(tk.Frame):
             master=master,
             bg='#EEEEEE' #Background color
         )
+        self.db = self.master.db
         self.key_label = self.create_key_label()
         self.key = Key(self)
         self.phrase_label = self.create_phrase_label()
@@ -60,7 +60,6 @@ class MainFrame(tk.Frame):
             self.up_button = self.create_up_button()
             self.down_button = self.create_down_button()
         self.activate_get_mode()
-        self.current_focus = 'key'
         self.configure_gui()
         self.bind_event_handlers()
         if config.get_show_tutorial():
@@ -124,6 +123,8 @@ class MainFrame(tk.Frame):
         if config.get_mode() == 'get':
             return
         language_dict = config.get_language_dict()
+        for item in [self, self.key_label, self.phrase_label]:
+            item.config(bg='#EEEEEE')
         self.phrase.config(
             bg='#F5F5F5',
             borderwidth=3
@@ -137,8 +138,8 @@ class MainFrame(tk.Frame):
                 command=self.copy_phrase
             )
         self.key.focus()
-        self.key.clear()
-        self.phrase.clear()
+        self.key.full_clear()
+        self.phrase.full_clear()
         config.set_mode('get')
 
     def activate_put_mode(self):
@@ -146,6 +147,8 @@ class MainFrame(tk.Frame):
         if config.get_mode() == 'put':
             return
         language_dict = config.get_language_dict()
+        for item in [self, self.key_label, self.phrase_label]:
+            item.config(bg='#F5FCFF')
         self.phrase.config(
             bg='#FFFFFF',
             borderwidth=2
@@ -159,8 +162,8 @@ class MainFrame(tk.Frame):
                 command=self.save_entry
             )
         self.phrase.focus()
-        #self.key.clear()
-        self.phrase.clear()
+        self.key.ignore_suggestion()
+        self.phrase.full_clear()
         config.set_mode('put')
     
     def create_up_button(self):
@@ -290,12 +293,12 @@ class MainFrame(tk.Frame):
         phrase = self.phrase.get_contents()
         print(phrase)
         #Save combination
-        db.prepare_undo()
-        db.save_entry(key_list, phrase)
-        print(db.db)
+        self.db.prepare_undo()
+        self.db.save_entry(key_list, phrase)
+        print(self.db)
         #Clear widgets after save
-        self.phrase.clear()
-        self.key.clear()
+        self.phrase.full_clear()
+        self.key.full_clear()
 
     def block_key_new_line(self, event):
         """ Prevent new lines in key text widget | None -> str """
@@ -322,11 +325,11 @@ class MainFrame(tk.Frame):
 
     def handle_key_backspace(self, event):
         """ Handles Backspace + modifier in Key widget | tk.Event -> str """
-        self.key.handle_backspace(event)
+        return self.key.handle_backspace(event) #Returns None or 'break'
         
     def handle_phrase_backspace(self, event):
         """ Handles Backspace + modifier in Phrase widget | tk.Event -> str """
-        self.phrase.handle_backspace(event)
+        return self.phrase.handle_backspace(event) #Returns None or 'break'
 
     def handle_key_button_release(self, event):
         """ Button release manager for key widget | tk.Event -> None 
@@ -334,28 +337,21 @@ class MainFrame(tk.Frame):
         When in put mode, switch to get mode if both fields are empty.
         When in put mode, confirm suggestion before switching focus to key
         """
-        self.current_focus = 'key'
+        self.clear_hints() #Clear hints if active and activate get mode
         key_contents = self.key.get_contents()
         phrase_contents = self.phrase.get_contents()
         if config.get_mode() == 'put':
             self.phrase.confirm_suggestion()
-            if key_contents == '':
-                if phrase_contents == '':
+            if key_contents == '' == phrase_contents:
                     self.activate_get_mode() #Switch to get mode
-                else:
-                    self.key.config(
-                        bg='#FFFFFF',
-                        borderwidth=2
-                    )
         self.key.handle_button_release(event)
         
     def handle_phrase_button_release(self, event):
-        self.current_focus = 'phrase'
+        self.clear_hints() #Clear hints if active and activate get mode
         if self.phrase.get_selection(): #If user selected text in phrase box
             self.key.confirm_suggestion()
             return
         elif not config.get_mode() == 'put':
-            self.key.ignore_suggestion()
             self.activate_put_mode()
             return
         else:
@@ -378,6 +374,8 @@ class MainFrame(tk.Frame):
         #No autocomplete for key widget in put mode
         if not config.get_mode() == 'put':
             self.key_autocomplete(event)
+        else:
+            self.key.current_text = self.key.get_contents()
 
     def handle_phrase_key_release(self, event):
         """ Autocomplete phrase and display related keys | tk.Event -> None
@@ -385,30 +383,41 @@ class MainFrame(tk.Frame):
         If key field is not empty, do not autocomplete to avoid deleting
         user input
         """
-        if not self.key.get_contents(): #If key field is empty
+        if not self.key.current_text: #If no user input in key field
             self.phrase_autocomplete(event)
     
     def key_autocomplete(self, event):
         """ Autocomplete key and suggest phrase | tk.Event -> None """
         self.key.autocomplete(event)
-        self.suggest_phrase()        
+        self.suggest_phrase()
         
     def phrase_autocomplete(self, event):
         """ Autocomplete phrase and get saved keys | tk.Event -> None """
         self.phrase.autocomplete(event)
         saved_keys = self.phrase.get_saved_keys()
         self.key.set_contents(saved_keys)
+        if saved_keys:
+            print('saved keys:' , saved_keys)
+            self.phrase.ignore_suggestion()
+        else:
+            print('no saved keys')
+            self.key.full_clear()
+            self.phrase.autocomplete(event)
         
     def suggest_phrase(self):
         key_list = self.key.get_display_key_list() #Includes suggestion if any
         success = self.phrase.display_phrase(key_list) #Display top valid phrase
         if not success: #If no valid phrase with autocompleted Key input:
-            self.phrase.clear() #Clear phrase display
+            self.phrase.full_clear() #Clear phrase display
 
     def display_hint(self, event):
+        """ NOT IMPLEMENTED """
         pass
 
     def load_tutorial(self):
+        config.set_mode('hint')
+        config.decrement_tutorial()
+        self.focus()
         language_dict = config.get_language_dict()
         with open(language_dict['tutorial'], 'r') as source:
             tutorial = source.read().split('***\n')
@@ -416,6 +425,22 @@ class MainFrame(tk.Frame):
             self.phrase.active_list_index = 0
             self.phrase.display_current()
 
+    def clear_hints(self):
+        print(f'clear hints if {config.get_mode() == "hint"}')
+        if config.get_mode() == 'hint':
+            self.activate_get_mode()
+
+    def print_tracker_variables(self):
+        print('Key variables:')
+        print(f'Key - current_text: {self.key.current_text}')
+        print(f'Key - current_text: {self.key.suggestion_text}')
+        print(f'Key - current_text: {self.key.suggestion_list}')
+        print(f'Key - current_text: {self.key.current_cursor}')
+        print(f'Phrase - current_text: {self.phrase.current_text}')
+        print(f'Phrase - current_text: {self.phrase.suggestion_text}')
+        print(f'Phrase - current_text: {self.phrase.suggestion_list}')
+        print(f'Phrase - current_text: {self.phrase.current_cursor}')
+            
     def bind_event_handlers(self):
         """ Binds all event handlers for all widgets | None -> None """
         #Copy and save bindings - active in all focus states
@@ -423,13 +448,15 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy_phrase())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
-        self.master.bind('<Command-z>', lambda event: db.undo())
-        self.master.bind('<Control-z>', lambda event: db.undo())
-        self.master.bind('<Control-y>', lambda event: db.redo())
-        self.master.bind('<Command-y>', lambda event: db.redo())
-        self.master.bind('<Control-Shift-z>', lambda event: db.redo())
-        self.master.bind('<Command-Shift-z>', lambda event: db.redo())
+        self.master.bind('<Command-z>', lambda event: self.db.undo())
+        self.master.bind('<Control-z>', lambda event: self.db.undo())
+        self.master.bind('<Control-y>', lambda event: self.db.redo())
+        self.master.bind('<Command-y>', lambda event: self.db.redo())
+        self.master.bind('<Control-Shift-z>', lambda event: self.db.redo())
+        self.master.bind('<Command-Shift-z>', lambda event: self.db.redo())
         self.master.bind('<Escape>', lambda event: config.change_mode())
+        self.master.bind('<Up>', lambda event: self.phrase.previous())
+        self.master.bind('<Down>', lambda event: self.phrase.next())
         #Key bindings - active when focus on Key entry widget
         self.key.bind('<Return>', self.block_key_new_line)
         self.key.bind('<Tab>', self.handle_key_tab)

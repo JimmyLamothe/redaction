@@ -90,10 +90,15 @@ class OptionMenu(tk.Menu):
             command=partial(config.set_backup_path, 'ask')
         )
         self.add_command(
-            label='Temp 4',
-            command=self.temp
+            label='Show tutorial',
+            command=self.master.master.main_frame.load_tutorial
+        )
+        self.add_command(
+            label='Print variables',
+            command=self.master.master.main_frame.print_tracker_variables
         )
 
+        
 class DisplayMenu(tk.Menu):
     """ Implements the display menu
 

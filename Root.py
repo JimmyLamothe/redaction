@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import filedialog
 import config
 import backup
+import Databases
 from MainFrame import MainFrame
 from Menus import MenuBar
 from commands import print_tracked_events
@@ -30,6 +31,7 @@ class Root(tk.Tk):
         tk.Tk.__init__(self)
         config.active_objects['root'] = self #Allows access outside creation module
         self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
+        self.db = Databases.StandardDatabase()
         self.main_frame = MainFrame(self)
         self.menu_bar = MenuBar(self)
         self['menu'] = self.menu_bar
@@ -82,8 +84,8 @@ class Root(tk.Tk):
         """ Binds all application window events """
         self.bind('<Configure>', self.save_geometry)
         if test:
-            #print_tracked_events(self)
+            print_tracked_events(self)
             #self.bind('<<MenuSelect>>', self.test_command)
-            self.menu_bar.bind('<<MenuSelect>>', self.test_command)
+            #self.menu_bar.bind('<<MenuSelect>>', self.test_command)
             #self.menu_bar.option_menu.bind('<<MenuSelect>>', self.test_command)
             #self.menu_bar.option_menu.bind('<<MenuSelect>>', self.test_command)

@@ -8,7 +8,6 @@ Classes: Key.
 import tkinter as tk
 from AutoText import AutoText
 import config
-import database as db
 
 class Key(AutoText):
     """ Implements the logic and interface for the Key text widget
@@ -62,11 +61,8 @@ class Key(AutoText):
             highlightbackground='#EEEEEE',
             highlightcolor='#EEEEEE',
         )
-        """
-        NOTE: Current text and cursor do not include the input currently
-              being processed. This is why they can differ from the display
-              text and display cursor accessed by other methods.
-        """
+        self.db = self.master.db
+
     @staticmethod
     def get_key_list(text):
         """ Create a list of keys from a string | str -> list """
@@ -85,7 +81,7 @@ class Key(AutoText):
         if self.suggestion_list:
             suggestion_list = self.suggestion_list
         else:
-            suggestion_list = db.valid_keys(partial_key) #All valid possible keys
+            suggestion_list = self.db.valid_keys(partial_key) #All valid possible keys
             suggestion_list = [s for s in suggestion_list if not s == partial_key]
         print('suggestion_list', suggestion_list)
         if suggestion_list: #If current input can be completed with a valid key: 

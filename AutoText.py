@@ -71,9 +71,17 @@ class AutoText(tk.Text):
         self.debug('increment_cursor', out=True)
         
     def clear(self):
-        """ Delete all text from Key widget | None -> None """
+        """ Delete all text from widget | None -> None """
         self.delete('1.0', tk.END)
 
+    def full_clear(self):
+        """ Delete all text and tracking variables | None -> None """
+        self.clear()
+        self.current_text = ''
+        self.current_cursor = None
+        self.suggestion_text = ''
+        self.suggestion_list = []
+        
     def update_display(self):
         self.debug('update_display')
         suggestion_start = f'1.{len(self.current_text)}'

@@ -87,7 +87,10 @@ def save_entry(key_list, phrase):
     else:
         print('Found DataFrame')
         if not key_list: #If no keys given
-            db = db.drop(phrase) #Used to delete phrase from database
+            try:
+                db = db.drop(phrase) #Used to delete phrase from database
+            except KeyError:
+                return
         db.loc[phrase] = False #Initialize row with all False 
         for key in key_list:
             add_column_if_missing(key) #Add missing new keys 

@@ -8,7 +8,6 @@ Classes: Phrase
 import tkinter as tk
 from AutoText import AutoText
 import config
-import database as db
 
 class Phrase(AutoText):
     """ Implements the interface and logic for the Phrase text widget
@@ -54,6 +53,7 @@ class Phrase(AutoText):
             highlightbackground='#EEEEEE',
             highlightcolor='#EEEEEE', #No border on focus
         )
+        self.db = master.db
         self.active_list=None, #Current valid phrases for current keys
         self.active_list_index=None #Current active_list index
         
@@ -61,7 +61,7 @@ class Phrase(AutoText):
         """ Get list of valid phrases for key list | list(str) -> None """
         if key_list and not key_list == ['']:
             print('key list', key_list)
-            phrase_list = db.get_phrase_list(key_list)
+            phrase_list = self.db.get_phrase_list(key_list)
             if phrase_list:
                 self.active_list = phrase_list
                 self.active_list_index = 0
@@ -118,7 +118,7 @@ class Phrase(AutoText):
         if self.suggestion_list: #If suggestion list exists, keep it
             suggestion_list = self.suggestion_list
         else: #Otherwise get all phrases starting with partial_phrase
-            suggestion_list = db.valid_phrases(partial_phrase)
+            suggestion_list = self.db.valid_phrases(partial_phrase)
             suggestion_list = [s for s in suggestion_list if not s == partial_phrase]
         print('suggestion_list', suggestion_list)
         if suggestion_list: #If current input can be completed with a valid phrase: 
@@ -131,9 +131,9 @@ class Phrase(AutoText):
         self.debug('get_suggestion', out=True)
 
     def get_saved_keys(self):
-        """ Get saved keys if any for current displayed phrase | None -> None """
-        phrase = self.get_contents()
-        saved_keys = db.saved_keys(phrase)
+        """ Get saved keys if any for current user input | None -> None """
+        phrase = self.current_text
+        saved_keys = self.db.saved_keys(phrase)
         return saved_keys
         
     def debug(self, name, out=False):

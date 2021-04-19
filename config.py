@@ -47,6 +47,7 @@ DEFAULT_CONFIG = {
     'db':'def', #Database implementation to use - only for testing
     'db_path':None, #Database save path
     'show_tutorial':True, #Show tutorial on startup
+    'remaining_tutorials':3, #Number of times to show tutorial on startup
     'debug':False #Print debug information - only for testing
 }
 
@@ -142,8 +143,15 @@ def get_show_buttons():
     return config_dict['show_buttons']
 
 def get_show_tutorial():
-    """ Get shot_tutorial bool from config_dict | None -> bool """
+    """ Get show_tutorial bool from config_dict | None -> bool """
     return config_dict['show_tutorial']
+
+def decrement_tutorial():
+    """ Decrement number of times to show tutorial | None -> None """
+    config_dict['tutorials_remaining'] -= 1
+    if config_dict['tutorials_remaining'] < 1:
+        config_dict['show_tutorial'] = False
+        config_dict['show_tutorial'] = 0
 
 def get_mode():
     """ Get current mode from config_dict | None -> str """
