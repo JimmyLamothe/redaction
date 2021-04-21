@@ -29,105 +29,58 @@ import pandas as pd
 import numpy as np
 import config
 
-class StandardDatabase():
-    """
-    This is the base class for the Key/Phrase database.
-    """
+class Database():
+    """ Abstract class """
 
-    def __init__(self):
-        self.db = self.load_database()
+    def __init__(self, name=None):
+        self.name = name #Defined by subclasses
         self.undo_db_list = [] #Cleared after each session
         self.redo_db_list = [] #Cleared after each session
-
+        self.db = self.load_database()
+        
+    def get_filepath(self):
+        """ Get full filepath of database file | None -> Path """
+        folder = config.get_db_path()
+        extension = '.pickle'
+        filename = self.name + extension
+        filepath = folder / filename
+        return filepath
+        
     def load_database(self):
         """ Loads database from disk if it exists | None -> pd.DataFrame or None """
         try:
-            db = pd.read_pickle(config.get_full_db_path())
+            db = pd.read_pickle(self.get_filepath())
             print('Loading saved key dataframe')
             print(db)
-        except FileNotFoundError:
+        except FileNotFoundError or AttributeError:
             print('No saved key dataframe')
             db = pd.DataFrame() #Initialize empty db
-            db.to_pickle(config.get_full_db_path()) 
+            db.to_pickle(self.get_filepath()) 
         return db
 
     def reload_database(self):
         """ Reload db from disk - used for undo and redo """
         self.db = load_database()
 
-    def get_phrase_series(self):
-        """ Gets phrase Series from key DataFrame | None -> pd.Series """
-        return self.db.index
-
     def save(self):
         """ Save contents of database to disk | db.DataFrame -> None """
-        self.db.to_pickle(config.get_full_db_path())
-    
-    def add_column_if_missing(self, name):
-        """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
-        if not name in self.db.columns:
-            self.db[name] = False
+        self.db.to_pickle(self.get_filepath())
 
     def initialize_db(self, key_list, phrase):
-        """ Create new database on first startup | list(str), str -> pd.DataFrame """
-        print('Initializing database')
-        row_data = []
-        for i in range(len(key_list)):
-            row_data.append(True)
-        self.db = pd.DataFrame.from_dict({phrase:row_data},
-                                         orient='index',
-                                         columns=key_list)
-        self.db.to_pickle(config.get_full_db_path())
+        """ Create new database on first startup | -> pd.DataFrame """
+        error_message = 'initialize_db must be overridden by subclass'
+        raise NotImplementedError(error_message)
+
+    def add_column_if_missing(self, name):
+        """ Initializes column if it doesn't exist | str -> None """
+        error_message = 'add_column_if_missing must be overridden by subclass'
+        raise NotImplementedError(error_message)
 
     def save_entry(self, key_list, phrase):
-        """ Save new key/phrase combination to database | list(str), str -> None """
-        if not phrase: #To prevent accidental empty phrase entry
-            return
-        if self.db.empty: #If first entry, initialize new database
-            self.initialize_db(key_list, phrase)
-            self.save_entry(key_list, phrase)
-        else:
-            print('Found DataFrame')
-            if not key_list: #If no keys given
-                try:
-                    self.db = db.drop(phrase) #Used to delete phrase from database
-                except KeyError:
-                    return
-            self.db.loc[phrase] = False #Initialize row with all False 
-            for key in key_list:
-                self.add_column_if_missing(key) #Add missing new keys 
-            self.db.loc[phrase, key_list] = True #Set keys in key_list to True
-            self.save()
-
-    def get_phrase_list(self, key_list):
-        """ Get list of valid phrases for a list of keys | list(str) -> list(str) """
-        try:
-            index = self.db.loc[self.db[key_list].all(axis=1), :].index
-            return list(index.values)
-        except KeyError:
-            return None
-
-    def valid_keys(self, partial_key):
-        """ Get list of db keys starting with specific string | str -> list(str) """
-        if partial_key:
-            mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
-            return list(self.db.columns[mask])
-        return []
-
-    def valid_phrases(self, partial_phrase):
-        """ Get list of db phrases starting with specific string | str -> list(str) """
-        if partial_phrase:
-            return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
-        return []
-
-    def saved_keys(self, phrase):
-        """ Get list of db keys for specific phrase | None -> list(str) """
-        try:
-            row = self.db.loc[phrase, :]
-            return list(row[row==True].index)
-        except KeyError:
-            return []
-
+        """ Save new combination to database |  -> None """
+        error_message = 'save_entry must be overridden by subclass'
+        raise NotImplementedError(error_message)
+    
     @staticmethod
     def get_words(word_list, minimum, maximum):
         """ Get random words from word list | list(str), int, int -> list(str) """
@@ -170,7 +123,7 @@ class StandardDatabase():
 
     def prepare_undo(self):
         """ Saves current db state to undo file and saves path | None -> None """
-        db_filepath = config.get_full_db_path()
+        db_filepath = self.get_filepath()
         filepath = self.generate_undo_filepath()
         shutil.copy(db_filepath, filepath)
         self.undo_db_list.append(filepath)
@@ -184,7 +137,7 @@ class StandardDatabase():
 
     def prepare_redo(self):
         """ Saves current db state to redo file and saves path | None -> None """
-        db_filepath = config.get_full_db_path()
+        db_filepath = self.get_filepath()
         filepath = generate_redo_filepath()
         shutil.copy(db_filepath, filepath)
         self.redo_db_list.append(filepath)
@@ -196,7 +149,7 @@ class StandardDatabase():
         #Part 1: Save current state to temp backup
         self.prepare_redo()
         #Part 2: Revert previous save command
-        db_filepath = config.get_full_db_path()
+        db_filepath = self.get_filepath()
         revert_filepath = undo_db_list[-1]
         shutil.copy(revert_filepath, db_filepath)
         self.undo_db_list.pop().unlink()
@@ -209,7 +162,7 @@ class StandardDatabase():
         #Part 1: Save current state to temp backup
         self.prepare_undo()
         #Part 2: Revert previous undo command
-        db_filepath = config.get_full_db_path()
+        db_filepath = self.get_filepath()
         revert_filepath = redo_db_list[-1]
         shutil.copy(revert_filepath, db_filepath)
         self.redo_db_list.pop().unlink()
@@ -220,3 +173,165 @@ class StandardDatabase():
 
     def __str__(self):
         return self.db.__str__()
+
+class StandardDatabase(Database):
+    """
+    Database class for Key/Phrase combinations
+
+    Keys form the column names.
+    Phrases form the index.
+
+    Values are booleans. True indicates a valid key / phrase match.
+    """
+
+    def __init__(self):
+        Database.__init__(self, name='standard')
+
+    def add_column_if_missing(self, name):
+        """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
+        if not name in self.db.columns:
+            self.db[name] = False
+
+    def initialize_db(self, key_list, phrase):
+        """ Create new database on first startup | list(str), str -> pd.DataFrame """
+        print('Initializing database')
+        row_data = []
+        for i in range(len(key_list)):
+            row_data.append(True)
+        self.db = pd.DataFrame.from_dict({phrase:row_data},
+                                         orient='index',
+                                         columns=key_list)
+        self.db.to_pickle(self.get_filepath())
+
+    def save_entry(self, key_list, phrase):
+        """ Save new key/phrase combination to database | list(str), str -> None """
+        if not phrase: #To prevent accidental empty phrase entry
+            return
+        if self.db.empty: #If first entry, initialize new database
+            self.initialize_db(key_list, phrase)
+            self.save_entry(key_list, phrase)
+        else:
+            print('Found DataFrame')
+            if not key_list: #If no keys given
+                try:
+                    self.db = self.db.drop(phrase) #To delete phrase from database
+                except KeyError:
+                    return
+            self.db.loc[phrase] = False #Initialize row with all False 
+            for key in key_list:
+                self.add_column_if_missing(key) #Add missing new keys 
+            self.db.loc[phrase, key_list] = True #Set keys in key_list to True
+            self.save()
+
+    def get_phrase_series(self):
+        """ Gets phrase Series from key DataFrame | None -> pd.Series """
+        return self.db.index
+            
+    def get_phrase_list(self, key_list):
+        """ Get list of valid phrases for a list of keys | list(str) -> list(str) """
+        try:
+            index = self.db.loc[self.db[key_list].all(axis=1), :].index
+            return list(index.values)
+        except KeyError:
+            return None
+
+    def valid_keys(self, partial_key):
+        """ Get list of db keys starting with specific string | str -> list(str) """
+        if partial_key:
+            mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
+            return list(self.db.columns[mask])
+        return []
+
+    def valid_phrases(self, partial_phrase):
+        """ Get list of db phrases starting with specific string | str -> list(str) """
+        if partial_phrase:
+            return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
+        return []
+
+    def saved_keys(self, phrase):
+        """ Get list of db keys for specific phrase | None -> list(str) """
+        try:
+            row = self.db.loc[phrase, :]
+            return list(row[row==True].index)
+        except KeyError:
+            return []
+
+class TranslationDatabase(StandardDatabase):
+    """
+    Database class for language pair databases.
+
+    Language 1 keys form the column names.
+    Language 2 keys from the index.
+
+    Values are booleans. True indicates a valid translation.
+    """
+
+    def __init__(self, lang1, lang2):
+        """ Initialize translation database | str, str -> None
+
+        NOTE: On initial creation, check if file exists. If so,
+        confirm user really wants to replace the existing database
+        """
+        name = lang1 + '_' + lang2
+        Database.__init__(self, name)
+
+    def add_column_if_missing(self, key_lang1):
+        """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
+        if not key_lang1 in self.db.columns:
+            self.db[key_lang1] = False
+
+    def initialize_db(self, key_lang1, key_lang2):
+        """ Create new database on first entry | str, str -> pd.DataFrame """
+        print('Initializing database')
+        self.db = pd.DataFrame.from_dict({key_lang2:[True]},
+                                         orient='index',
+                                         columns=[key_lang1])
+        self.db.to_pickle(self.get_filepath())
+
+    def save_entry(self, key_lang1, key_lang2):
+        """ Save new translation to database | str, str -> None """
+        if not key_lang1 or not key_lang2: #To prevent accidental empty entry
+            return
+        if self.db.empty: #If first entry, initialize new database
+            self.initialize_db(key_lang1, key_lang2)
+            self.save_entry(key_lang1, key_lang2)
+        else:
+            print('Found DataFrame')
+            if not key_lang2 in self.db.index:
+                self.db.loc[key_lang2] = False #Initialize row with all False 
+            self.add_column_if_missing(key_lang1) #Add missing new key 
+            self.db.loc[key_lang2, key_lang1] = True #Set key in key_lang1 to True
+            self.save()
+
+    def get_phrase_series(self):
+        """ Gets all keys for language 2 | None -> pd.Series """
+        return self.db.index
+            
+    def get_phrase_list(self, key_lang1):
+        """ Get list of valid translations for language 1 key | str -> list(str) """
+        try:
+            index = self.db.loc[self.db[key_lang1], :].index
+            return list(index.values)
+        except KeyError:
+            return None
+
+    def valid_keys(self, partial_key):
+        """ Get list of language 1 keys starting with string | str -> list(str) """
+        if partial_key:
+            mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
+            return list(self.db.columns[mask])
+        return []
+
+    def valid_phrases(self, partial_phrase):
+        """ Get list of language 2 keys starting with string | str -> list(str) """
+        if partial_phrase:
+            return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
+        return []
+
+    def saved_keys(self, key_lang2):
+        """ Get list of valid translations for langue 2 key | str -> list(str) """
+        try:
+            row = self.db.loc[key_lang2, :]
+            return list(row[row==True].index)
+        except KeyError:
+            return []

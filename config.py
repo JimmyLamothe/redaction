@@ -213,7 +213,7 @@ def get_db_path():
     """ Get database save path | None -> pathlib.Path """
     if config_dict['db_path']:
         return pathlib.Path(config_dict['db_path'])
-    return None
+    return None #NOTE: On startup set_db_path will be called if this is returned
 
 def get_full_db_path():
     """ Returns full path to db including filename | None -> str """
@@ -233,7 +233,7 @@ def get_backup_path():
     """ Get database backup path | None -> Path """
     if config_dict['backup_path']:
         return pathlib.Path(config_dict['backup_path'])
-    return None
+    return None #NOTE: On startup set_backup_path will be called if this is returned
 
 def set_session_path(session_path=None):
     """ Sets session directory, creating if necessary | optional:Path -> None """
@@ -245,7 +245,7 @@ def get_session_path():
     """ Get path to session database save states | None -> Path """
     if config_dict['session_path']:
         return pathlib.Path(config_dict['session_path'])
-    return None
+    return None #NOTE: On startup set_session_path will be called if this is returned
 
 def get_debug():
     """ Get debug bool from config_dict | None -> bool """
