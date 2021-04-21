@@ -29,21 +29,21 @@ class Root(tk.Tk):
     """
     def __init__(self):
         tk.Tk.__init__(self)
-        config.active_objects['root'] = self #Allows access outside creation module
-        self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
-        self.db = Databases.StandardDatabase()
-        self.main_frame = MainFrame(self)
-        self.menu_bar = MenuBar(self)
-        self['menu'] = self.menu_bar
-        self.title(config.get_language_dict()['title']) #Application name
-        self.set_geometry()
-        self.bind_events()
         if not config.get_db_path():
             config.set_db_path()
         if not config.get_backup_path():
             config.set_backup_path()
         if not config.get_session_path():
             config.set_session_path()
+        config.active_objects['db'] = Databases.StandardDatabase()
+        config.active_objects['root'] = self #Allows access outside creation module
+        self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
+        self.main_frame = MainFrame(self)
+        self.menu_bar = MenuBar(self)
+        self['menu'] = self.menu_bar
+        self.title(config.get_language_dict()['title']) #Application name
+        self.set_geometry()
+        self.bind_events()
         
     def redraw(self):
         """ Redraws the application window using current config settings """

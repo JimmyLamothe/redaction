@@ -46,8 +46,12 @@ DEFAULT_CONFIG = {
     'mode':'put', #'get' entry from db or 'put' entry in db
     'db':'def', #Database implementation to use - only for testing
     'db_path':None, #Database save path
+    'backup_path':None, #Database backup path
+    'session_path':None, #Session save path
+    'db_type':'standard', #Database type ('standard' or 'translation')
+    'language_pair': None, #Active language pair if translation db active
     'show_tutorial':True, #Show tutorial on startup
-    'remaining_tutorials':3, #Number of times to show tutorial on startup
+    'tutorials_remaining':3, #Number of times to show tutorial on startup
     'debug':False #Print debug information - only for testing
 }
 
@@ -88,9 +92,10 @@ LANGUAGE_DICT = {
     'English':ENGLISH_DICT
 }
 
-#Holds references to GUI objects while app is active
+#Holds references to common-use objects while app is active
 active_objects = { 
     'root':None,
+    'db':None
 }
 
 def load_config():

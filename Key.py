@@ -61,7 +61,7 @@ class Key(AutoText):
             highlightbackground='#EEEEEE',
             highlightcolor='#EEEEEE',
         )
-        self.db = self.master.db
+        self.db = config.active_objects['db']
 
     @staticmethod
     def get_key_list(text):

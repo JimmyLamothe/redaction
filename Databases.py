@@ -303,11 +303,23 @@ class TranslationDatabase(StandardDatabase):
             self.db.loc[key_lang2, key_lang1] = True #Set key in key_lang1 to True
             self.save()
 
-    def get_phrase_series(self):
-        """ Gets all keys for language 2 | None -> pd.Series """
-        return self.db.index
+    def get_lang1_keys(self):
+        """ Gets list of keys for language 1 | None -> np.Array """
+        return list(self.columns.values)
             
-    def get_phrase_list(self, key_lang1):
+    def get_lang2_keys(self):
+        """ Gets list of keys for language 2 | None -> np.Array """
+        return list(self.db.index.values)
+            
+    def get_lang1_matches(self, key_lang2):
+        """ Get list of valid translations for language 2 key | str -> list(str) """
+        try:
+            row = self.db.loc[key_lang2, :]
+            return list(row[row==True].index)
+        except KeyError:
+            return []
+
+    def get_lang2_matches(self, key_lang1):
         """ Get list of valid translations for language 1 key | str -> list(str) """
         try:
             index = self.db.loc[self.db[key_lang1], :].index
@@ -315,23 +327,15 @@ class TranslationDatabase(StandardDatabase):
         except KeyError:
             return None
 
-    def valid_keys(self, partial_key):
+    def valid_lang1_keys(self, partial_key):
         """ Get list of language 1 keys starting with string | str -> list(str) """
         if partial_key:
             mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
             return list(self.db.columns[mask])
         return []
 
-    def valid_phrases(self, partial_phrase):
+    def valid_lang2_keys(self, partial_key):
         """ Get list of language 2 keys starting with string | str -> list(str) """
-        if partial_phrase:
-            return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
+        if partial_key:
+            return list(self.db.index[self.db.index.str.startswith(partial_key)])
         return []
-
-    def saved_keys(self, key_lang2):
-        """ Get list of valid translations for langue 2 key | str -> list(str) """
-        try:
-            row = self.db.loc[key_lang2, :]
-            return list(row[row==True].index)
-        except KeyError:
-            return []

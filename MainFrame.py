@@ -48,7 +48,7 @@ class MainFrame(tk.Frame):
             master=master,
             bg='#EEEEEE' #Background color
         )
-        self.db = self.master.db
+        self.db = config.active_objects['db']
         self.key_label = self.create_key_label()
         self.key = Key(self)
         self.phrase_label = self.create_phrase_label()
@@ -468,3 +468,29 @@ class MainFrame(tk.Frame):
         self.phrase.bind('<BackSpace>', self.handle_phrase_backspace)
         self.phrase.bind('<ButtonRelease>', self.handle_phrase_button_release)
         self.phrase.bind('<KeyRelease>', self.handle_phrase_key_release)
+
+class TranslationMainFrame(MainFrame):    
+    def __init__(self, master):
+        self.master = master
+        tk.Frame.__init__(
+            self,
+            master=master,
+            bg='#EEEEEE' #Background color
+        )
+        self.db = config.active_objects['db']
+        self.key_label = self.create_key_label()
+        self.key = Key(self)
+        self.phrase_label = self.create_phrase_label()
+        self.phrase = Phrase(self)
+        if config.get_show_buttons():
+            print('creating buttons')
+            self.left_button = self.create_left_button()
+            self.right_button = self.create_right_button()
+            self.up_button = self.create_up_button()
+            self.down_button = self.create_down_button()
+        self.activate_get_mode()
+        self.configure_gui()
+        self.bind_event_handlers()
+        if config.get_show_tutorial():
+            self.load_tutorial()
+        backup()
