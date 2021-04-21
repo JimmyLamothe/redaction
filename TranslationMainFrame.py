@@ -1,24 +1,23 @@
-""" Implements the MainFrame class
+""" Implements the TranslationMainFrame class
 
-Classes: MainFrame
+Classes: TranslationMainFrame
 """
 
 import tkinter as tk
 from PIL import ImageTk, Image
-from Key import Key
-from Phrase import Phrase
+from Phrase import Language1, Language2
 import config
 from backup import backup
 
-class MainFrame(tk.Frame):
+class TranslationMainFrame(tk.Frame):
     """ Implements the widget interface and logic.
 
-    Displays a Key object and a Phrase object with their own internal logic,
+    Displays a lang1 and lang 2 text widget with their own internal logic,
     and four optional buttons.
     
-    Implements user-input logic not specific to the Key or Phrase object.
+    Implements user-input logic not specific to the lang1 and lang 2 widgets.
     
-    Handles widget keyboard and mouse events.
+    Handles keyboard and mouse events.
 
     Args:
         master (tk.Tk): Root object inheriting from tk.Tk
@@ -49,39 +48,36 @@ class MainFrame(tk.Frame):
             bg='#EEEEEE' #Background color
         )
         self.db = config.active_objects['db']
-        self.key_label = self.create_key_label()
-        self.key = Key(self)
-        self.phrase_label = self.create_phrase_label()
-        self.phrase = Phrase(self)
+        self.lang1_label = self.create_lang1_label()
+        self.lang1 = Language1(self)
+        self.lang2_label = self.create_lang2_label()
+        self.lang2 = Language2(self)
         if config.get_show_buttons():
             print('creating buttons')
             self.left_button = self.create_left_button()
             self.right_button = self.create_right_button()
             self.up_button = self.create_up_button()
             self.down_button = self.create_down_button()
-        self.activate_get_mode()
         self.configure_gui()
         self.bind_event_handlers()
-        if config.get_show_tutorial():
-            self.load_tutorial()
         backup()
         
-    def create_key_label(self):
-        """ Creates a label for the key entry widget | None -> tk.Label """
+    def create_lang1_label(self):
+        """ Creates a label for the lang1 text widget | None -> tk.Label """
         language_dict = config.get_language_dict() #Active language name dict
         label = tk.Label(
             master=self,
-            text=language_dict['key'],
+            text=language_dict['language_pair'][0],
             bg='#EEEEEE'
         )
         return label
     
-    def create_phrase_label(self):
-        """ Creates a label for the phrase text widget | None -> tk.Label """
+    def create_lang2_label(self):
+        """ Creates a label for the lang2 text widget | None -> tk.Label """
         language_dict = config.get_language_dict() #Active language name dict
         label = tk.Label(
             master=self,
-            text=language_dict['phrase'],
+            text=language_dict['language_pair'][1],
             bg='#EEEEEE'
         )
         return label
@@ -91,8 +87,8 @@ class MainFrame(tk.Frame):
         language_dict = config.get_language_dict() #Active language name dict
         button = tk.Button(
             master=self,
-            command=config.change_mode,
-            text=language_dict['new'], #Changes with config.change_mode
+            command=self.save_entry, #TO BE DETERMINED
+            text=language_dict['save'], #TO BE DETERMINED
             relief=tk.RIDGE,
             borderwidth=2,
             fg='BLACK',
@@ -107,8 +103,8 @@ class MainFrame(tk.Frame):
         language_dict = config.get_language_dict() #Active language name dict
         button = tk.Button(
             master=self,
-            command=self.copy_phrase, #Changes with config.change_mode
-            text=language_dict['copy'], #Changes with config.change_mode
+            command=self.copy_phrase, #TO BE DETERMINED
+            text=language_dict['copy'], #TO BE DETERMINED
             relief=tk.RIDGE,
             borderwidth=2,
             fg='BLACK',
@@ -117,54 +113,6 @@ class MainFrame(tk.Frame):
             pady=5
         )
         return button
-    
-    def activate_get_mode(self):
-        """ Sets app to get entry from database | None -> None """
-        if config.get_mode() == 'get':
-            return
-        language_dict = config.get_language_dict()
-        for item in [self, self.key_label, self.phrase_label]:
-            item.config(bg='#EEEEEE')
-        self.phrase.config(
-            bg='#F5F5F5',
-            borderwidth=3
-            )
-        if config.get_show_buttons():
-            self.left_button.config(
-                text=language_dict['new'],
-            )
-            self.right_button.config(
-                text=language_dict['copy'],
-                command=self.copy_phrase
-            )
-        self.key.focus()
-        self.key.full_clear()
-        self.phrase.full_clear()
-        config.set_mode('get')
-
-    def activate_put_mode(self):
-        """ Sets app to save entry to database | None -> None """
-        if config.get_mode() == 'put':
-            return
-        language_dict = config.get_language_dict()
-        for item in [self, self.key_label, self.phrase_label]:
-            item.config(bg='#F5FCFF')
-        self.phrase.config(
-            bg='#FFFFFF',
-            borderwidth=2
-            )
-        if config.get_show_buttons():
-            self.left_button.config(
-                text=language_dict['cancel'],
-            )
-            self.right_button.config(
-                text=language_dict['save'],
-                command=self.save_entry
-            )
-        self.phrase.focus()
-        self.key.ignore_suggestion()
-        self.phrase.full_clear()
-        config.set_mode('put')
     
     def create_up_button(self):
         """ Creates previous phrase button | None -> tk.Button """
@@ -200,14 +148,10 @@ class MainFrame(tk.Frame):
 
     def set_text(self, language_dict):
         """ Sets text of all widgets to config settings | None -> None """
-        self.key_label.config(text=language_dict['key'])
-        self.phrase_label.config(text=language_dict['phrase'])
-        if config.get_mode() == 'get':
-            self.left_button.config(text=language_dict['new'])
-            self.right_button.config(text=language_dict['copy'])
-        else:
-            self.left_button.config(text=language_dict['cancel'])
-            self.right_button.config(text=language_dict['save'])
+        self.lang1_label.config(text=language_dict['language_pair'][0])
+        self.lang2_label.config(text=language_dict['language_pair'][1])
+        self.left_button.config(text=language_dict['save'])
+        self.right_button.config(text=language_dict['copy'])
     
     def configure_gui(self):
         """ Configures tkinter GUI | None -> None """
@@ -219,26 +163,26 @@ class MainFrame(tk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.master.columnconfigure(0, weight=1)
         #Place widgets
-        self.key_label.grid(
+        self.lang1_label.grid(
             row=0,
             column=0,
             pady=(10,0)
         )
-        self.key.grid(
+        self.lang1.grid(
             row=0,
             column=1,
             sticky='ew', #Stretches horizontally with window
-            padx=(0,100),
+            padx=(0,20),
             pady=(10,0)
         )
-        self.phrase_label.grid(
+        self.lang2_label.grid(
             row=1,
             column=0
         )
-        self.phrase.grid(
+        self.lang2.grid(
             row=1,
             column=1,
-            sticky='nsew', #Stretches with window
+            sticky='ew', #Stretches horizontally with window
             padx=(0,20),
             pady=(5,10)
         )
@@ -277,85 +221,75 @@ class MainFrame(tk.Frame):
             column=0,
             sticky='nsew' #Stretches with window
         )
-        self.key.focus() #Focus on key widget
+        self.lang1.focus() #Focus on key widget
         
     def copy_phrase(self):
-        """ Copy phrase text widget contents to clipboard | None -> None """ 
-        phrase = self.phrase.get_contents()
-        self.master.clipboard_clear()
-        self.master.clipboard_append(phrase)
+        """ Copy active translation to clipboard | None -> None """
+        translation = None
+        if self.lang2.active_list:
+            translation = self.lang2.get_contents()
+        elif self.lang1.active_list:
+            translation = self.lang1.get_contents()
+        if translation:
+            self.master.clipboard_clear()
+            self.master.clipboard_append(translation)
         
     def save_entry(self):
         """ Save active key/phrase combination to db | None -> None """
         #Get key and phrase
-        key_list = self.key.get_display_key_list()
-        print(key_list)
-        phrase = self.phrase.get_contents()
-        print(phrase)
+        lang1_key = self.lang1.get_contents()
+        print(lang1_key)
+        lang2_key = self.lang2.get_contents()
+        print(lang2_key)
         #Save combination
         self.db.prepare_undo()
-        self.db.save_entry(key_list, phrase)
+        self.db.save_entry(lang1_key, lang2_key)
         print(self.db)
         #Clear widgets after save
         self.phrase.full_clear()
         self.key.full_clear()
 
-    def block_key_new_line(self, event):
-        """ Prevent new lines in key text widget | None -> str """
+    def block_new_line(self, event):
+        """ Prevent new lines in lang1 and lang 2 text widgets | None -> str """
         print('blocking new line')
         return 'break' #Interrupt standard tkinter event processing
         
-    def handle_key_tab(self, event):
-        """ Handle tab keypress in Key text widget | None -> str """
-        if config.get_mode() == 'put':
-            if not self.key.suggestion_text:
-                self.phrase.focus()
-                return 'break'
-        self.key.handle_tab(event)
+    def handle_lang1_tab(self, event):
+        """ Handle tab keypress in lang1 text widget | None -> str """
+        if self.lang1.suggestion_text:
+            self.lang1.handle_tab(event)
+            return 'break' 
+        self.lang2.focus()
         return 'break' #Interrupt standard tkinter event processing
     
-    def handle_phrase_tab(self, event):
-        """ Handle tab keypress in Phrase text widget | None -> str """
-        if config.get_mode() == 'put':
-            if not self.phrase.suggestion_text:
-                self.key.focus()
-                return 'break'
-        self.phrase.handle_tab(event)
+    def handle_lang2_tab(self, event):
+        """ Handle tab keypress in lang2 text widget | None -> str """
+        if self.lang2.suggestion_text:
+            self.lang2.handle_tab(event)
+            return 'break' 
+        self.lang1.focus()
         return 'break' #Interrupt standard tkinter event processing
 
-    def handle_key_backspace(self, event):
-        """ Handles Backspace + modifier in Key widget | tk.Event -> str """
-        return self.key.handle_backspace(event) #Returns None or 'break'
+    def handle_lang1_backspace(self, event):
+        """ Handles Backspace + modifier in lang1 widget | tk.Event -> str """
+        return self.lang1.handle_backspace(event) #Returns None or 'break'
         
-    def handle_phrase_backspace(self, event):
-        """ Handles Backspace + modifier in Phrase widget | tk.Event -> str """
-        return self.phrase.handle_backspace(event) #Returns None or 'break'
+    def handle_lang2_backspace(self, event):
+        """ Handles Backspace + modifier in lang2 widget | tk.Event -> str """
+        return self.lang2.handle_backspace(event) #Returns None or 'break'
 
-    def handle_key_button_release(self, event):
-        """ Button release manager for key widget | tk.Event -> None 
-        
-        When in put mode, switch to get mode if both fields are empty.
-        When in put mode, confirm suggestion before switching focus to key
-        """
-        self.clear_hints() #Clear hints if active and activate get mode
-        key_contents = self.key.get_contents()
-        phrase_contents = self.phrase.get_contents()
-        if config.get_mode() == 'put':
-            self.phrase.confirm_suggestion()
-            if key_contents == '' == phrase_contents:
-                    self.activate_get_mode() #Switch to get mode
-        self.key.handle_button_release(event)
-        
-    def handle_phrase_button_release(self, event):
-        self.clear_hints() #Clear hints if active and activate get mode
-        if self.phrase.get_selection(): #If user selected text in phrase box
-            self.key.confirm_suggestion()
+    def handle_lang1_button_release(self, event):
+        """ Button release manager for lang1 widget | tk.Event -> None """
+        if self.lang1.get_selection(): #If user selected text in lang1 box
+            self.lang2.confirm_suggestion()
             return
-        elif not config.get_mode() == 'put':
-            self.activate_put_mode()
+        self.lang1.handle_button_release(event)
+        
+    def handle_lang2_button_release(self, event):
+        if self.lang2.get_selection(): #If user selected text in lang2 box
+            self.lang1.confirm_suggestion()
             return
-        else:
-            self.phrase.handle_button_release(event)
+        self.lang2.handle_button_release(event)
 
     def debug(self, number):
         if not config.get_debug():
@@ -369,66 +303,36 @@ class MainFrame(tk.Frame):
         print(f'suggestion_text = {self.key.suggestion_text}')
         print(f'suggestion_list = {self.key.suggestion_list}')
         
-    def handle_key_key_release(self, event):
+    def handle_lang1_key_release(self, event):
         """ Key release manager for key widget | tk.Event -> None """
         #No autocomplete for key widget in put mode
-        if not config.get_mode() == 'put':
-            self.key_autocomplete(event)
-        else:
-            self.key.current_text = self.key.get_contents()
+        self.lang1_autocomplete(event)
 
-    def handle_phrase_key_release(self, event):
-        """ Autocomplete phrase and display related keys | tk.Event -> None
-        
-        If key field is not empty, do not autocomplete to avoid deleting
-        user input
-        """
-        if not self.key.current_text: #If no user input in key field
-            self.phrase_autocomplete(event)
+    def handle_lang2_key_release(self, event):
+        """ Autocomplete phrase and display related keys | tk.Event -> None """
+        self.lang2_autocomplete(event)
     
-    def key_autocomplete(self, event):
-        """ Autocomplete key and suggest phrase | tk.Event -> None """
-        self.key.autocomplete(event)
-        self.suggest_phrase()
+    def lang1_autocomplete(self, event):
+        """ Autocomplete lang1 and suggest lang2 match | tk.Event -> None """
+        self.lang1.autocomplete(event)
+        self.suggest_lang2()
         
     def phrase_autocomplete(self, event):
-        """ Autocomplete phrase and get saved keys | tk.Event -> None """
-        self.phrase.autocomplete(event)
-        saved_keys = self.phrase.get_saved_keys()
-        self.key.set_contents(saved_keys)
-        if saved_keys:
-            print('saved keys:' , saved_keys)
-            self.phrase.ignore_suggestion()
-        else:
-            print('no saved keys')
-            self.key.full_clear()
-            self.phrase.autocomplete(event)
-        
-    def suggest_phrase(self):
-        key_list = self.key.get_display_key_list() #Includes suggestion if any
-        success = self.phrase.display_phrase(key_list) #Display top valid phrase
+        """ Autocomplete lang2 and suggest lang1 match | tk.Event -> None """
+        self.lang2.autocomplete(event)
+        sellf.suggest_lang1()
+
+    def suggest_lang2(self):
+        key = self.lang2.get_contents() #Includes suggestion if any
+        success = self.lang1.display_phrase(key) #Display top valid phrase
         if not success: #If no valid phrase with autocompleted Key input:
-            self.phrase.full_clear() #Clear phrase display
-
-    def display_hint(self, event):
-        """ NOT IMPLEMENTED """
-        pass
-
-    def load_tutorial(self):
-        config.set_mode('hint')
-        config.decrement_tutorial()
-        self.focus()
-        language_dict = config.get_language_dict()
-        with open(language_dict['tutorial'], 'r') as source:
-            tutorial = source.read().split('***\n')
-            self.phrase.active_list = tutorial
-            self.phrase.active_list_index = 0
-            self.phrase.display_current()
-
-    def clear_hints(self):
-        print(f'clear hints if {config.get_mode() == "hint"}')
-        if config.get_mode() == 'hint':
-            self.activate_get_mode()
+            self.lang1.full_clear() #Clear phrase display
+        
+    def suggest_lang2(self):
+        key = self.lang1.get_contents() #Includes suggestion if any
+        success = self.lang2.display_phrase(key) #Display top valid phrase
+        if not success: #If no valid phrase with autocompleted Key input:
+            self.lang2.full_clear() #Clear phrase display
 
     def print_tracker_variables(self):
         print('Key variables:')
@@ -454,17 +358,17 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-y>', lambda event: self.db.redo())
         self.master.bind('<Control-Shift-z>', lambda event: self.db.redo())
         self.master.bind('<Command-Shift-z>', lambda event: self.db.redo())
-        self.master.bind('<Escape>', lambda event: config.change_mode())
         self.master.bind('<Up>', lambda event: self.phrase.previous())
         self.master.bind('<Down>', lambda event: self.phrase.next())
         #Key bindings - active when focus on Key entry widget
-        self.key.bind('<Return>', self.block_key_new_line)
-        self.key.bind('<Tab>', self.handle_key_tab)
-        self.key.bind('<BackSpace>', self.handle_key_backspace)
-        self.key.bind('<KeyRelease>', self.handle_key_key_release)
-        self.key.bind('<ButtonRelease>', self.handle_key_button_release)
+        self.lang1.bind('<Return>', self.block_new_line)
+        self.lang1.bind('<Tab>', self.handle_lang1_tab)
+        self.lang1.bind('<BackSpace>', self.handle_lang1_backspace)
+        self.lang1.bind('<KeyRelease>', self.handle_lang1_key_release)
+        self.lang1.bind('<ButtonRelease>', self.handle_lang1_button_release)
         #Phrase bindings - active when focus on Phrase text widget
-        self.phrase.bind('<Tab>', self.handle_phrase_tab)
-        self.phrase.bind('<BackSpace>', self.handle_phrase_backspace)
-        self.phrase.bind('<ButtonRelease>', self.handle_phrase_button_release)
-        self.phrase.bind('<KeyRelease>', self.handle_phrase_key_release)
+        self.lang2.bind('<Return>', self.block_new_line)
+        self.lang2.bind('<Tab>', self.handle_lang2_tab)
+        self.lang2.bind('<BackSpace>', self.handle_lang2_backspace)
+        self.lang2.bind('<ButtonRelease>', self.handle_lang2_button_release)
+        self.lang2.bind('<KeyRelease>', self.handle_lang2_key_release)

@@ -49,7 +49,7 @@ DEFAULT_CONFIG = {
     'backup_path':None, #Database backup path
     'session_path':None, #Session save path
     'db_type':'standard', #Database type ('standard' or 'translation')
-    'language_pair': None, #Active language pair if translation db active
+    'language_pair': None, #Active language pair tuple if translation db active
     'show_tutorial':True, #Show tutorial on startup
     'tutorials_remaining':3, #Number of times to show tutorial on startup
     'debug':False #Print debug information - only for testing
