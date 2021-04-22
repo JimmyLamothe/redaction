@@ -225,9 +225,9 @@ class TranslationMainFrame(tk.Frame):
 
     def get_active_lang(self):
         if self.lang2.active_list:
-            return lang2
+            return self.lang2
         elif self.lang1.active_list:
-            return lang1
+            return self.lang1
         return None
 
     def next_match(self):
@@ -341,11 +341,6 @@ class TranslationMainFrame(tk.Frame):
             self.lang2.autocomplete(event)
             self.suggest_lang1()
         
-    def phrase_autocomplete(self, event):
-        """ Autocomplete lang2 and suggest lang1 match | tk.Event -> None """
-        self.lang2.autocomplete(event)
-        sellf.suggest_lang1()
-
     def suggest_lang1(self):
         key = self.lang2.get_contents() #Includes suggestion if any
         success = self.lang1.display_phrase(key) #Display top valid phrase

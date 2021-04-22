@@ -314,18 +314,26 @@ class TranslationDatabase(StandardDatabase):
     def get_lang1_matches(self, key_lang2):
         """ Get list of valid translations for language 2 key | str -> list(str) """
         try:
-            row = self.db.loc[key_lang2, :]
+            row = self.db.loc[key_lang2.lower(), :]
             return list(row[row==True].index)
         except KeyError:
-            return []
+            try:
+                row = self.db.loc[key_lang2.title(), :]
+                return list(row[row==True].index)
+            except KeyError:
+                return []
 
     def get_lang2_matches(self, key_lang1):
         """ Get list of valid translations for language 1 key | str -> list(str) """
         try:
-            index = self.db.loc[self.db[key_lang1], :].index
+            index = self.db.loc[self.db[key_lang1.lower()], :].index
             return list(index.values)
         except KeyError:
-            return None
+            try:
+                index = self.db.loc[self.db[key_lang1.title()], :].index
+                return list(index.values)
+            except KeyError:
+                return []
 
     def valid_lang1_keys(self, partial_key):
         """ Get list of language 1 keys starting with string | str -> list(str) """
@@ -337,5 +345,6 @@ class TranslationDatabase(StandardDatabase):
     def valid_lang2_keys(self, partial_key):
         """ Get list of language 2 keys starting with string | str -> list(str) """
         if partial_key:
-            return list(self.db.index[self.db.index.str.startswith(partial_key)])
+            mask = self.db.index.str.lower().str.startswith(partial_key.lower())
+            return list(self.db.index[mask])
         return []

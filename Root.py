@@ -79,6 +79,11 @@ class Root(tk.Tk):
             self.geometry(config_dict['default_size'])
         self.minsize(400, 160)
 
+    def translation_mode(self, language_pair):
+        """ Activate translation mode | None -> None """
+        config.set_db_type('translation')
+        config.set_language_pair(language_pair)
+        
     def save_geometry(self, event):
         """ Saves the current window geometry """
         config.get_config()['current_geometry'] = self.geometry()

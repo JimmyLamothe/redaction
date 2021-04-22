@@ -144,19 +144,19 @@ class Phrase(AutoText):
         super().debug(name, out=out)
 
 class Language(Phrase):
-    """ Abstract class for Language widgets. Only difference with Phrase class
-    for now is that display_phrase takes str instead of list(str). 
+    """ Abstract class for Language widgets. 
 
     Must be subclassed to be instantiated because database differentiates
     between language 1 and language 2.
     Language 1 keys -> database columns
     Language 2 keys -> database index.
-"""
+    """
     def __init__(self, master):
         Phrase.__init__(self, master)
         
     def display_phrase(self, key):
         """ Displays matching translations for current key  | None -> None """
+        print(f'display_phrase({key})')
         if self.create_list(key) == 'VALID KEY':
             #print('Active phrase list:', self.phrase.active_list) #Testing code
             self.clear()
@@ -166,22 +166,21 @@ class Language(Phrase):
             self.clear()
             return False
 
+    def create_list(self, key):
+        """ Get list of valid translations for key | list(str) -> None """
+        match_list = self.get_matches(key)
+        if match_list:
+            self.active_list = match_list
+            self.active_list_index = 0
+            return 'VALID KEY'
+        return 'INVALID KEY'
+        
 class Language1(Language):
     """ Class for language 1 widget. Corresponds to TranslationDatabase columns """
     def __init__(self, master):
         Language.__init__(self, master)
         self.config(height=1)
-        
-    def create_list(self, key):
-        """ Get list of valid translations for key | list(str) -> None """
-        if key:
-            print('key:', key)
-            match_list = self.db.get_lang2_matches(key)
-            if match_list:
-                self.active_list = match_list
-                self.active_list_index = 0
-                return 'VALID KEY'
-        return 'INVALID KEY'
+        self.config(bg='#FFFFFF')
 
     def get_suggestion(self):
         """ Complete current input with valid key from db | None -> None """
@@ -206,26 +205,24 @@ class Language1(Language):
     def get_saved_keys(self):
         """ Get lang2 match if any for current user input | None -> None """
         key = self.current_text
+        print('key:', key)
         matches = self.db.get_lang2_matches(key)
+        print('matches:', matches)
         return matches
-        
+
+    def get_matches(self, key):
+        print('key', key)
+        matches = self.db.get_lang1_matches(key)
+        print('matches', matches)
+        print(self.db)
+        return matches
+    
 class Language2(Language):
     """ Class for language 2 widget. Corresponds to TranslationDatabase index """
     def __init__(self, master):
         Language.__init__(self, master)
         self.config(height=1)
-        
-    def create_list(self, key):
-        """ Get list of valid translations for key | list(str) -> None """
-        if key:
-            print('key:', key)
-            match_list = self.db.get_lang1_matches(key)
-            if match_list:
-                self.active_list = match_list
-                self.active_list_index = 0
-                return 'VALID KEY'
-        return 'INVALID KEY'
-
+        self.config(bg='#FFFFFF')
     def get_suggestion(self):
         """ Complete current input with valid key from db | None -> None """
         self.debug('get_suggestion')
@@ -249,5 +246,14 @@ class Language2(Language):
     def get_saved_keys(self):
         """ Get lang1 match if any for current user input | None -> None """
         key = self.current_text
+        print('key:', key)
         matches = self.db.get_lang1_matches(key)
+        print('matches:', matches)
+        return matches
+
+    def get_matches(self, key):
+        print('key', key)
+        matches = self.db.get_lang2_matches(key)
+        print('matches', matches)
+        print(self.db)
         return matches

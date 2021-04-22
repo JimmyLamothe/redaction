@@ -147,6 +147,10 @@ def get_db_type():
     """ Get db type from config_dict | None -> bool """
     return config_dict['db_type']
 
+def set_db_type(setting):
+    """ Set db type ('standard' or 'translation') | str -> None """
+    config_dict['db_type'] = setting
+    
 def get_lang1():
     """ Get language 1 from active language pair | None -> bool """
     return config_dict['language_pair'][0]
@@ -154,7 +158,11 @@ def get_lang1():
 def get_lang2():
     """ Get language2 from active language pair | None -> bool """
     return config_dict['language_pair'][1]
-    
+
+def set_language_pair(language_pair):
+    """ Sets db to language pair | list -> None """
+    config_dict['language_pair'] = language_pair
+
 def get_show_buttons():
     """ Get show_buttons bool from config_dict | None -> bool """
     return config_dict['show_buttons']
