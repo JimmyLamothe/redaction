@@ -10,6 +10,7 @@ import config
 import backup
 import Databases
 from MainFrame import MainFrame
+from TranslationMainFrame import TranslationMainFrame
 from Menus import MenuBar
 from commands import print_tracked_events
 
@@ -35,10 +36,21 @@ class Root(tk.Tk):
             config.set_backup_path()
         if not config.get_session_path():
             config.set_session_path()
-        config.active_objects['db'] = Databases.StandardDatabase()
+        db_type = config.get_db_type()
+        if db_type == 'standard':
+            db = Databases.StandardDatabase()
+        else:
+            db = Databases.TranslationDatabase(
+                config.get_lang1(),
+                config.get_lang2()
+            )
+        config.active_objects['db'] = db
         config.active_objects['root'] = self #Allows access outside creation module
         self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
-        self.main_frame = MainFrame(self)
+        if db_type == 'standard':
+            self.main_frame = MainFrame(self)
+        else:
+            self.main_frame = TranslationMainFrame(self)
         self.menu_bar = MenuBar(self)
         self['menu'] = self.menu_bar
         self.title(config.get_language_dict()['title']) #Application name
@@ -65,7 +77,7 @@ class Root(tk.Tk):
             self.geometry(config_dict['initial_geometry'])
         else:
             self.geometry(config_dict['default_size'])
-        self.minsize(300, 180)
+        self.minsize(400, 160)
 
     def save_geometry(self, event):
         """ Saves the current window geometry """

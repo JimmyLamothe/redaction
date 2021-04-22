@@ -152,8 +152,8 @@ class Language(Phrase):
     Language 1 keys -> database columns
     Language 2 keys -> database index.
 """
-    def __init__(self, name):
-        Phrase.__init__(self)
+    def __init__(self, master):
+        Phrase.__init__(self, master)
         
     def display_phrase(self, key):
         """ Displays matching translations for current key  | None -> None """
@@ -168,9 +168,10 @@ class Language(Phrase):
 
 class Language1(Language):
     """ Class for language 1 widget. Corresponds to TranslationDatabase columns """
-    def __init__(self):
-        Language.__init__(self)
-
+    def __init__(self, master):
+        Language.__init__(self, master)
+        self.config(height=1)
+        
     def create_list(self, key):
         """ Get list of valid translations for key | list(str) -> None """
         if key:
@@ -186,14 +187,14 @@ class Language1(Language):
         """ Complete current input with valid key from db | None -> None """
         self.debug('get_suggestion')
         partial_key = self.current_text #Get partial phrase
-        print(f'partial_key: {partial_key}, len: {len(partial_phrase)}')
+        print(f'partial_key: {partial_key}, len: {len(partial_key)}')
         if self.suggestion_list: #If suggestion list exists, keep it
             suggestion_list = self.suggestion_list
-        else: #Otherwise get all phrases starting with partial_key
-            suggestion_list = self.db.valid_lang1_keys(key)
+        else: #Otherwise get all keys starting with partial_key
+            suggestion_list = self.db.valid_lang1_keys(partial_key)
             suggestion_list = [s for s in suggestion_list if not s == partial_key]
         print('suggestion_list', suggestion_list)
-        if suggestion_list: #If current input can be completed with a valid phrase: 
+        if suggestion_list: #If current input can be completed with a valid key: 
             suggestion = suggestion_list[0] #TODO: Rank suggestions
             print('suggestion', suggestion)
             #Save suggested chars
@@ -210,9 +211,10 @@ class Language1(Language):
         
 class Language2(Language):
     """ Class for language 2 widget. Corresponds to TranslationDatabase index """
-    def __init__(self):
-        Language.__init__(self)
-
+    def __init__(self, master):
+        Language.__init__(self, master)
+        self.config(height=1)
+        
     def create_list(self, key):
         """ Get list of valid translations for key | list(str) -> None """
         if key:
@@ -228,11 +230,11 @@ class Language2(Language):
         """ Complete current input with valid key from db | None -> None """
         self.debug('get_suggestion')
         partial_key = self.current_text #Get partial phrase
-        print(f'partial_key: {partial_key}, len: {len(partial_phrase)}')
+        print(f'partial_key: {partial_key}, len: {len(partial_key)}')
         if self.suggestion_list: #If suggestion list exists, keep it
             suggestion_list = self.suggestion_list
         else: #Otherwise get all phrases starting with partial_key
-            suggestion_list = self.db.valid_lang2_keys(key)
+            suggestion_list = self.db.valid_lang2_keys(partial_key)
             suggestion_list = [s for s in suggestion_list if not s == partial_key]
         print('suggestion_list', suggestion_list)
         if suggestion_list: #If current input can be completed with a valid phrase: 

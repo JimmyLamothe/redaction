@@ -143,6 +143,18 @@ def redraw():
     active_objects['root'].destroy()
     active_objects['root'].redraw()
 
+def get_db_type():
+    """ Get db type from config_dict | None -> bool """
+    return config_dict['db_type']
+
+def get_lang1():
+    """ Get language 1 from active language pair | None -> bool """
+    return config_dict['language_pair'][0]
+
+def get_lang2():
+    """ Get language2 from active language pair | None -> bool """
+    return config_dict['language_pair'][1]
+    
 def get_show_buttons():
     """ Get show_buttons bool from config_dict | None -> bool """
     return config_dict['show_buttons']

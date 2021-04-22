@@ -30,7 +30,7 @@ class TranslationMainFrame(tk.Frame):
         create_up_button() -> tk.Button
         create_down_button() -> tk.Button
         configure_gui()
-        copy_phrase()
+        copy()
         save_entry()
         handle_key_tab(tk.Event) -> str
         handle_phrase_tab(tk.Event) -> str
@@ -64,20 +64,18 @@ class TranslationMainFrame(tk.Frame):
         
     def create_lang1_label(self):
         """ Creates a label for the lang1 text widget | None -> tk.Label """
-        language_dict = config.get_language_dict() #Active language name dict
         label = tk.Label(
             master=self,
-            text=language_dict['language_pair'][0],
+            text=config.get_lang1(),
             bg='#EEEEEE'
         )
         return label
     
     def create_lang2_label(self):
         """ Creates a label for the lang2 text widget | None -> tk.Label """
-        language_dict = config.get_language_dict() #Active language name dict
         label = tk.Label(
             master=self,
-            text=language_dict['language_pair'][1],
+            text=config.get_lang2(),
             bg='#EEEEEE'
         )
         return label
@@ -103,7 +101,7 @@ class TranslationMainFrame(tk.Frame):
         language_dict = config.get_language_dict() #Active language name dict
         button = tk.Button(
             master=self,
-            command=self.copy_phrase, #TO BE DETERMINED
+            command=self.copy, #TO BE DETERMINED
             text=language_dict['copy'], #TO BE DETERMINED
             relief=tk.RIDGE,
             borderwidth=2,
@@ -122,7 +120,7 @@ class TranslationMainFrame(tk.Frame):
         self.up_icon = icon
         button = tk.Button(
             master=self,
-            command=self.phrase.previous, #Displays previous phrase
+            command=self.previous_match, #Displays previous phrase
             image=icon,
             relief=tk.RIDGE,
             borderwidth=2,
@@ -138,7 +136,7 @@ class TranslationMainFrame(tk.Frame):
         self.down_icon = icon
         button = tk.Button(
             master=self,
-            command=self.phrase.next, #Displays next phrase
+            command=self.next_match, #Displays next phrase
             image=icon,
             relief=tk.RIDGE,
             borderwidth=2,
@@ -177,12 +175,14 @@ class TranslationMainFrame(tk.Frame):
         )
         self.lang2_label.grid(
             row=1,
-            column=0
+            column=0,
+            sticky='n',
+            pady=(10,0)
         )
         self.lang2.grid(
             row=1,
             column=1,
-            sticky='ew', #Stretches horizontally with window
+            sticky='new', #Stretches horizontally with window
             padx=(0,20),
             pady=(5,10)
         )
@@ -202,18 +202,18 @@ class TranslationMainFrame(tk.Frame):
                 pady=(0,15)
             )
             self.up_button.grid(
-                row=1,
+                row=0,
                 column=2,
-                sticky='n',
+                sticky='s',
                 padx=(0,15),
-                pady=(15,0)
+                pady=(30,0)
             )
             self.down_button.grid(
                 row=1,
                 column=2,
-                sticky='s',
+                sticky='n',
                 padx=(0,15),
-                pady=(0,15)
+                pady=(30,0)
             )
         #Place self in Root object
         self.grid(
@@ -222,14 +222,31 @@ class TranslationMainFrame(tk.Frame):
             sticky='nsew' #Stretches with window
         )
         self.lang1.focus() #Focus on key widget
-        
-    def copy_phrase(self):
-        """ Copy active translation to clipboard | None -> None """
-        translation = None
+
+    def get_active_lang(self):
         if self.lang2.active_list:
-            translation = self.lang2.get_contents()
+            return lang2
         elif self.lang1.active_list:
-            translation = self.lang1.get_contents()
+            return lang1
+        return None
+
+    def next_match(self):
+        active_lang = self.get_active_lang()
+        if active_lang:
+            active_lang.next()
+
+    def previous_match(self):
+        active_lang = self.get_active_lang()
+        if active_lang:
+            active_lang.previous()
+    
+    def copy(self):
+        """ Copy active translation to clipboard | None -> None """
+        active_lang = self.get_active_lang()
+        if active_lang:
+            translation = active_lang.get_contents()
+        else:
+            translation = None
         if translation:
             self.master.clipboard_clear()
             self.master.clipboard_append(translation)
@@ -246,8 +263,8 @@ class TranslationMainFrame(tk.Frame):
         self.db.save_entry(lang1_key, lang2_key)
         print(self.db)
         #Clear widgets after save
-        self.phrase.full_clear()
-        self.key.full_clear()
+        self.lang1.full_clear()
+        self.lang2.full_clear()
 
     def block_new_line(self, event):
         """ Prevent new lines in lang1 and lang 2 text widgets | None -> str """
@@ -314,15 +331,22 @@ class TranslationMainFrame(tk.Frame):
     
     def lang1_autocomplete(self, event):
         """ Autocomplete lang1 and suggest lang2 match | tk.Event -> None """
-        self.lang1.autocomplete(event)
-        self.suggest_lang2()
+        if not self.lang2.current_text:
+            self.lang1.autocomplete(event)
+            self.suggest_lang2()
+
+    def lang2_autocomplete(self, event):
+        """ Autocomplete lang1 and suggest lang2 match | tk.Event -> None """
+        if not self.lang1.current_text:
+            self.lang2.autocomplete(event)
+            self.suggest_lang1()
         
     def phrase_autocomplete(self, event):
         """ Autocomplete lang2 and suggest lang1 match | tk.Event -> None """
         self.lang2.autocomplete(event)
         sellf.suggest_lang1()
 
-    def suggest_lang2(self):
+    def suggest_lang1(self):
         key = self.lang2.get_contents() #Includes suggestion if any
         success = self.lang1.display_phrase(key) #Display top valid phrase
         if not success: #If no valid phrase with autocompleted Key input:
@@ -334,6 +358,10 @@ class TranslationMainFrame(tk.Frame):
         if not success: #If no valid phrase with autocompleted Key input:
             self.lang2.full_clear() #Clear phrase display
 
+    def load_tutorial(self):
+        """ NOT IMPLEMENTED """
+        pass
+            
     def print_tracker_variables(self):
         print('Key variables:')
         print(f'Key - current_text: {self.key.current_text}')
@@ -348,8 +376,8 @@ class TranslationMainFrame(tk.Frame):
     def bind_event_handlers(self):
         """ Binds all event handlers for all widgets | None -> None """
         #Copy and save bindings - active in all focus states
-        self.master.bind('<Control-c>', lambda event: self.copy_phrase())
-        self.master.bind('<Command-c>', lambda event: self.copy_phrase())
+        self.master.bind('<Control-c>', lambda event: self.copy())
+        self.master.bind('<Command-c>', lambda event: self.copy())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
         self.master.bind('<Command-z>', lambda event: self.db.undo())
