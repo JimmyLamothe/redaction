@@ -267,11 +267,22 @@ def get_backup_path():
 
 def set_session_path(path=None):
     """ Sets session directory, creating if necessary | optional:Path -> None """
-    session_path = create_session_dir(path)
+    session_path = utilities.create_session_dir(path)
     config_dict['session_path'] = str(session_path)
     
 def get_session_path():
     """ Get path to session database save states | None -> Path """
+    if config_dict['session_path']:
+        return pathlib.Path(config_dict['session_path'])
+    return None #NOTE: On startup set_session_path will be called if this is returned
+
+def set_docs_path(path=None):
+    """ Sets docs directory, creating if necessary | optional:Path -> None """
+    docs_path = utilities.create_docs_dir(path)
+    config_dict['docs_path'] = str(docs_path)
+    
+def get_docs_path():
+    """ Get path to docs dir | None -> Path """
     if config_dict['session_path']:
         return pathlib.Path(config_dict['session_path'])
     return None #NOTE: On startup set_session_path will be called if this is returned

@@ -26,22 +26,13 @@ def get_default_dir():
     default_dir.mkdir(parents=True, exist_ok=True)
     return default_dir
 
-def create_standard_backup_dir(path=None):
+def create_backup_dir(path=None):
     """ Creates standard db backup dir and returns path | Path -> Path """
     if not path:
         path = get_default_dir()
-    standard_backup_dir = path / 'backup' / 'standard'
-    standard_backup_dir.mkdir(parents=True, exist_ok=True)
-    return standard_backup_dir
-
-def create_language_pair_bkup_dir(language_pair, path=None):
-    """ Creates language pair backup dir and returns path | Path -> Path """
-    if not path:
-        path = get_default_dir()
-    folder_name = language_pair[0] + '_' + language_pair[1]
-    pair_backup_dir = path / 'backup' / 'translation' / folder_name
-    pair_backup_dir.mkdir(parents=True, exist_ok=True)
-    return pair_backup_dir
+    backup_dir = path / 'backup'
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    return backup_dir
 
 def create_session_dir(path=None):
     """ Creates session dir if needed and returns path | Path -> Path """
@@ -58,14 +49,6 @@ def create_db_dir(path=None):
     db_dir = path / 'db'
     db_dir.mkdir(parents=True, exist_ok=True)
     return db_dir
-
-def create_config_dir(path=None):
-    """ Creates config dir if needed and returns path | Path -> Path """
-    if not path:
-        path = get_default_dir()
-    config_dir = path / 'config'
-    config_dir.mkdir(parents=True, exist_ok=True)
-    return config_dir
 
 def create_docs_dir(path=None):
     """ Creates docs dir if needed and returns path | Path -> Path """

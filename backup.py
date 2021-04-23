@@ -27,8 +27,9 @@ def date_from_string(date_string):
 
 def load_backup_dates():
     """ Loads backup dates from disk or returns default setting | None -> dict """
+    backup_dir = config.get_backup_path()
     try:
-        with open('config/backup_dates.json', 'r') as date_file:
+        with open(backup_dir / 'backup_dates.json', 'r') as date_file:
             backup_date_dict = json.load(date_file)
             backup_date_dict = {k:date_from_string(v)
                                 for k, v in backup_date_dict.items()}
@@ -43,7 +44,8 @@ backup_date_dict = load_backup_dates()
 
 def save_backup_dates():
     """ Saves backup dates to disk | None -> None """
-    with open('config/backup_dates.json', 'w') as date_file:
+    backup_dir = config.get_backup_path()
+    with open(backup_dir / 'backup_dates.json', 'w') as date_file:
         print('Saving backup dates:', backup_date_dict)
         json.dump(backup_date_dict, date_file, default=str)
 
@@ -85,7 +87,8 @@ def daily_backup():
     print('daily backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
-    backup_filepath = backup_path / 'daily.pickle'
+    db_name = config.get_db_name()
+    backup_filepath = backup_path / (db_name + '_daily.pickle')
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
     backup_date_dict['day'] = date.today()
@@ -96,7 +99,8 @@ def weekly_backup():
     print('weekly backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
-    backup_filepath = backup_path / 'weekly.pickle'
+    db_name = config.get_db_name()
+    backup_filepath = backup_path / (db_name + '_weekly.pickle')
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
     backup_date_dict['week'] = date.today()
@@ -107,7 +111,8 @@ def monthly_backup():
     print('monthly backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
-    backup_filepath = backup_path / 'monthly.pickle'
+    db_name = config.get_db_name()
+    backup_filepath = backup_path / (db_name + '_monthly.pickle')
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
     backup_date_dict['month'] = date.today()
@@ -118,7 +123,8 @@ def yearly_backup():
     print('yearly backup in progress')
     db_filepath = config.get_full_db_path()
     backup_path = config.get_backup_path()
-    backup_filepath = backup_path / 'yearly.pickle'
+    db_name = config.get_db_name()
+    backup_filepath = backup_path / (db_name + '_yearly.pickle')
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
     backup_date_dict['year'] = date.today()

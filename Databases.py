@@ -60,7 +60,7 @@ class Database():
 
     def reload_database(self):
         """ Reload db from disk - used for undo and redo """
-        self.db = load_database()
+        self.db = self.load_database()
 
     def save(self):
         """ Save contents of database to disk | db.DataFrame -> None """
@@ -138,7 +138,7 @@ class Database():
     def prepare_redo(self):
         """ Saves current db state to redo file and saves path | None -> None """
         db_filepath = self.get_filepath()
-        filepath = generate_redo_filepath()
+        filepath = self.generate_redo_filepath()
         shutil.copy(db_filepath, filepath)
         self.redo_db_list.append(filepath)
     
@@ -150,7 +150,7 @@ class Database():
         self.prepare_redo()
         #Part 2: Revert previous save command
         db_filepath = self.get_filepath()
-        revert_filepath = undo_db_list[-1]
+        revert_filepath = self.undo_db_list[-1]
         shutil.copy(revert_filepath, db_filepath)
         self.undo_db_list.pop().unlink()
         self.reload_database()
@@ -163,7 +163,7 @@ class Database():
         self.prepare_undo()
         #Part 2: Revert previous undo command
         db_filepath = self.get_filepath()
-        revert_filepath = redo_db_list[-1]
+        revert_filepath = self.redo_db_list[-1]
         shutil.copy(revert_filepath, db_filepath)
         self.redo_db_list.pop().unlink()
         self.reload_database()
