@@ -46,6 +46,7 @@ class Root(tk.Tk):
             )
         config.active_objects['db'] = db
         config.active_objects['root'] = self #Allows access outside creation module
+        backup.backup()
         self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
         if db_type == 'standard':
             self.main_frame = MainFrame(self)

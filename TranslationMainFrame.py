@@ -7,7 +7,6 @@ import tkinter as tk
 from PIL import ImageTk, Image
 from Phrase import Language1, Language2
 import config
-from backup import backup
 
 class TranslationMainFrame(tk.Frame):
     """ Implements the widget interface and logic.
@@ -60,7 +59,6 @@ class TranslationMainFrame(tk.Frame):
             self.down_button = self.create_down_button()
         self.configure_gui()
         self.bind_event_handlers()
-        backup()
         
     def create_lang1_label(self):
         """ Creates a label for the lang1 text widget | None -> tk.Label """

@@ -8,7 +8,6 @@ from PIL import ImageTk, Image
 from Key import Key
 from Phrase import Phrase
 import config
-from backup import backup
 
 class MainFrame(tk.Frame):
     """ Implements the widget interface and logic.
@@ -64,7 +63,6 @@ class MainFrame(tk.Frame):
         self.bind_event_handlers()
         if config.get_show_tutorial():
             self.load_tutorial()
-        backup()
         
     def create_key_label(self):
         """ Creates a label for the key entry widget | None -> tk.Label """

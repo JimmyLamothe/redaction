@@ -34,7 +34,7 @@ import pathlib
 import json
 from json.decoder import JSONDecodeError
 from tkinter import filedialog
-from utilities import get_default_dir, get_default_backup, get_default_session
+import utilities
 
 #Default configuration on first execution or config reset
 DEFAULT_CONFIG = {
@@ -104,8 +104,8 @@ def load_config():
         with open('config/config.json', 'r') as config_file:
             config_dict = json.load(config_file)
             print('Loading saved configuration:', config_dict)
-    except (FileNotFoundError, ValueError):
-        print('Loading default configuration:', DEFAULT_CONFIG)
+    except Exception: #ValueError, FileNotFoundError
+        print('Config not found, loading default:', DEFAULT_CONFIG)
         config_dict = DEFAULT_CONFIG
     return config_dict
 
@@ -228,10 +228,9 @@ def get_languages():
     """ Alphabetical list of supported languages | None -> list(str) """
     return sorted([key for key in LANGUAGE_DICT])
 
-def set_db_path(db_path=None):
+def set_db_path(path=None):
     """ Set db save folder, creating if necessary | optional:Path -> None """
-    if not db_path:
-        db_path = get_default_dir()
+    db_path = utilities.create_db_dir(path)
     config_dict['db_path'] = str(db_path)
 
 def get_db_path():
@@ -240,18 +239,24 @@ def get_db_path():
         return pathlib.Path(config_dict['db_path'])
     return None #NOTE: On startup set_db_path will be called if this is returned
 
+def get_db_name():
+    """ Get database name | None -> str """
+    if get_db_type() == 'standard':
+        db_name = 'standard'
+    else:
+        db_name = get_lang1() + '_' + get_lang2()
+    return db_name
+
 def get_full_db_path():
     """ Returns full path to db including filename | None -> str """
     folder = get_db_path()
-    file_name = 'key.pickle'
+    db_name = get_db_name()
+    file_name = db_name + '.pickle'
     return folder / file_name
 
-def set_backup_path(backup_path=None):
+def set_backup_path(path=None):
     """ Sets backup directory, creating if necessary | optional:Path -> None """
-    if not backup_path:
-        backup_path = get_default_backup()
-    elif backup_path == 'ask':
-        backup_path = filedialog.askdirectory()
+    backup_path = utilities.create_backup_dir()
     config_dict['backup_path'] = str(backup_path)
 
 def get_backup_path():
@@ -260,10 +265,9 @@ def get_backup_path():
         return pathlib.Path(config_dict['backup_path'])
     return None #NOTE: On startup set_backup_path will be called if this is returned
 
-def set_session_path(session_path=None):
+def set_session_path(path=None):
     """ Sets session directory, creating if necessary | optional:Path -> None """
-    if not session_path:
-        session_path = get_default_session()
+    session_path = create_session_dir(path)
     config_dict['session_path'] = str(session_path)
     
 def get_session_path():

@@ -21,11 +21,17 @@ DEFAULT_DATES = {
     'year': None #Time of last yearly backup (365 days)
     }
 
+def date_from_string(date_string):
+    """ Creates date object from date string | str -> datetime.Date """
+    return date(*[int(item) for item in date_string.split('-')])
+
 def load_backup_dates():
     """ Loads backup dates from disk or returns default setting | None -> dict """
     try:
         with open('config/backup_dates.json', 'r') as date_file:
             backup_date_dict = json.load(date_file)
+            backup_date_dict = {k:date_from_string(v)
+                                for k, v in backup_date_dict.items()}
             print('Loading backup dates:', backup_date_dict)
     except (FileNotFoundError, ValueError):
         print('Loading empty backup dates:', DEFAULT_DATES)
@@ -39,7 +45,7 @@ def save_backup_dates():
     """ Saves backup dates to disk | None -> None """
     with open('config/backup_dates.json', 'w') as date_file:
         print('Saving backup dates:', backup_date_dict)
-        json.dump(backup_date_dict, date_file)
+        json.dump(backup_date_dict, date_file, default=str)
 
 def new_day():
     """ Checks if 1 day has passed since last backup | None -> bool """
@@ -82,6 +88,8 @@ def daily_backup():
     backup_filepath = backup_path / 'daily.pickle'
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
+    backup_date_dict['day'] = date.today()
+    save_backup_dates()
 
 def weekly_backup():
     """ Performs weekly backup | None -> None """
@@ -91,7 +99,9 @@ def weekly_backup():
     backup_filepath = backup_path / 'weekly.pickle'
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
-
+    backup_date_dict['week'] = date.today()
+    save_backup_dates()
+    
 def monthly_backup():
     """ Performs monthly backup | None -> None """
     print('monthly backup in progress')
@@ -100,7 +110,9 @@ def monthly_backup():
     backup_filepath = backup_path / 'monthly.pickle'
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
-
+    backup_date_dict['month'] = date.today()
+    save_backup_dates()
+    
 def yearly_backup():
     """ Performs yearly backup | None -> None """
     print('yearly backup in progress')
@@ -109,6 +121,8 @@ def yearly_backup():
     backup_filepath = backup_path / 'yearly.pickle'
     print(f'saving {backup_filepath}')
     shutil.copy(db_filepath, backup_filepath)
+    backup_date_dict['year'] = date.today()
+    save_backup_dates()
     
 def backup():
     """ Performs all backups if needed | None -> None """
