@@ -52,6 +52,8 @@ class MainFrame(tk.Frame):
         self.key = Key(self)
         self.phrase_label = self.create_phrase_label()
         self.phrase = Phrase(self)
+        self.widget1 = self.key #To allow same call as TranslationMainFrame
+        self.widget2 = self.phrase #To allow same call as TranslationMainFrame
         if config.get_show_buttons():
             print('creating buttons')
             self.left_button = self.create_left_button()
@@ -408,11 +410,16 @@ class MainFrame(tk.Frame):
         if not success: #If no valid phrase with autocompleted Key input:
             self.phrase.full_clear() #Clear phrase display
 
-    def display_hint(self, event):
-        """ NOT IMPLEMENTED """
-        pass
+    def display_hint(self, hint_list):
+        """ Display first hint in hint list | lst(str) -> None """
+        config.set_mode('hint')
+        self.focus()
+        self.phrase.active_list  = hint_list
+        self.phrase_active_list_index = 0
+        self.phrase_display_current()
 
     def load_tutorial(self):
+        """ Display tutorial in hint mode | None -> None """
         config.set_mode('hint')
         config.decrement_tutorial()
         self.focus()
@@ -424,6 +431,7 @@ class MainFrame(tk.Frame):
             self.phrase.display_current()
 
     def clear_hints(self):
+        """ Clear hints and switch to get mode | None -> None """
         print(f'clear hints if {config.get_mode() == "hint"}')
         if config.get_mode() == 'hint':
             self.activate_get_mode()

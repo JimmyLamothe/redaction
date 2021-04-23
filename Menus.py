@@ -155,6 +155,28 @@ class OptionMenu(tk.Menu):
             command=self.master.master.main_frame.print_tracker_variables
         )
 
+class LanguageMenu(tk.Menu):
+    """ Implements the language menu
+
+    Args:
+        master(tk.Menu): MainMenu object inheriting from tk.Menu
+
+    Methods:
+        add_commands
+    """
+        
+    def __init__(self, master):
+        tk.Menu.__init__(self, master)
+        self.add_commands()
+
+    def add_commands(self):
+        """ Add items to language menu | None -> None """
+        for language in config.get_languages():
+            self.add_command(
+                label=language,
+                command=partial(config.set_language, language)
+            )
+
         
 class DisplayMenu(tk.Menu):
     """ Implements the display menu
@@ -182,24 +204,3 @@ class DisplayMenu(tk.Menu):
             command = config.hide_buttons
         )
     
-class LanguageMenu(tk.Menu):
-    """ Implements the language menu
-
-    Args:
-        master(tk.Menu): MainMenu object inheriting from tk.Menu
-
-    Methods:
-        add_commands
-    """
-        
-    def __init__(self, master):
-        tk.Menu.__init__(self, master)
-        self.add_commands()
-
-    def add_commands(self):
-        """ Add items to language menu | None -> None """
-        for language in config.get_languages():
-            self.add_command(
-                label=language,
-                command=partial(config.set_language, language)
-            )

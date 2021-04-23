@@ -1,3 +1,5 @@
+TODO: Bug: Up - Down in translation mode
+
 TODO: Bug: Geography differences between standard + translation
 
 TODO: Translation Mode: Menu to activate mode

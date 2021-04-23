@@ -51,6 +51,8 @@ class TranslationMainFrame(tk.Frame):
         self.lang1 = Language1(self)
         self.lang2_label = self.create_lang2_label()
         self.lang2 = Language2(self)
+        self.widget1 = self.lang1 #To allow same call as MainFrame
+        self.widget2 = self.lang2 #To allow same call as MainFrame
         if config.get_show_buttons():
             print('creating buttons')
             self.left_button = self.create_left_button()
@@ -223,8 +225,10 @@ class TranslationMainFrame(tk.Frame):
 
     def get_active_lang(self):
         if self.lang2.active_list:
+            print('lang2 active')
             return self.lang2
         elif self.lang1.active_list:
+            print('lang1 active')
             return self.lang1
         return None
 
@@ -232,11 +236,13 @@ class TranslationMainFrame(tk.Frame):
         active_lang = self.get_active_lang()
         if active_lang:
             active_lang.next()
+        return 'break'
 
     def previous_match(self):
         active_lang = self.get_active_lang()
         if active_lang:
             active_lang.previous()
+        return 'break'
     
     def copy(self):
         """ Copy active translation to clipboard | None -> None """
@@ -320,11 +326,14 @@ class TranslationMainFrame(tk.Frame):
         
     def handle_lang1_key_release(self, event):
         """ Key release manager for key widget | tk.Event -> None """
-        #No autocomplete for key widget in put mode
+        if event.keysym in ('Up', 'Down'):
+            return 'break'
         self.lang1_autocomplete(event)
 
     def handle_lang2_key_release(self, event):
         """ Autocomplete phrase and display related keys | tk.Event -> None """
+        if event.keysym in ('Up', 'Down'):
+            return 'break'
         self.lang2_autocomplete(event)
     
     def lang1_autocomplete(self, event):
@@ -379,8 +388,8 @@ class TranslationMainFrame(tk.Frame):
         self.master.bind('<Command-y>', lambda event: self.db.redo())
         self.master.bind('<Control-Shift-z>', lambda event: self.db.redo())
         self.master.bind('<Command-Shift-z>', lambda event: self.db.redo())
-        self.master.bind('<Up>', lambda event: self.phrase.previous())
-        self.master.bind('<Down>', lambda event: self.phrase.next())
+        self.master.bind('<Up>', lambda event: self.next_match())
+        self.master.bind('<Down>', lambda event: self.previous_match())
         #Key bindings - active when focus on Key entry widget
         self.lang1.bind('<Return>', self.block_new_line)
         self.lang1.bind('<Tab>', self.handle_lang1_tab)

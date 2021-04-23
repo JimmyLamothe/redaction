@@ -76,9 +76,12 @@ class Phrase(AutoText):
 
     def not_last_index(self):
         """ If current self.active_list index isn't the last | None -> Bool """
-        if self.active_list and (self.active_list_index <
-                                 (len(self.active_list) - 1)):
-              return True
+        if self.active_list:
+            print(self.active_list)
+            print(self.active_list_index)
+            return False
+            if self.active_list_index < (len(self.active_list) - 1):
+                return True
         return False
 
     def next(self):
@@ -90,8 +93,12 @@ class Phrase(AutoText):
             
     def not_first_index(self):
         """ If current self.active_list index isn't the first | None -> Bool """
-        if self.active_list and (self.active_list_index >= 1):
-            return True
+        if self.active_list:
+            print(self.active_list)
+            print(self.active_list_index)
+            return False
+            if self.active_list_index >= 1:
+                return True
         return False
             
     def previous(self):
@@ -169,6 +176,7 @@ class Language(Phrase):
     def create_list(self, key):
         """ Get list of valid translations for key | list(str) -> None """
         match_list = self.get_matches(key)
+        print('match_list =', match_list)
         if match_list:
             self.active_list = match_list
             self.active_list_index = 0
@@ -223,6 +231,7 @@ class Language2(Language):
         Language.__init__(self, master)
         self.config(height=1)
         self.config(bg='#FFFFFF')
+
     def get_suggestion(self):
         """ Complete current input with valid key from db | None -> None """
         self.debug('get_suggestion')
