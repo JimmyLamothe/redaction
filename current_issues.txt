@@ -1,10 +1,8 @@
 TODO: Bug: Geography differences between standard + translation
 
-
 TODO: Translation Mode: Menu to activate mode
       		  	List of language pairs
 			Backups for each pair
-			Separate folders for standard and trans dbs
 
 TODO: Feature: Pro mode - No buttons - No hints - Tab to switch
       	       Normal mode - Buttons - Hints - No tab to switch

@@ -66,10 +66,12 @@ FRENCH_DICT = {
     'language':'Langue',
     'show_buttons':'Montrer les boutons',
     'hide_buttons':'Cacher les boutons',
+    'file':'Fichier',
     'options':'Options',
     'display':'Affichage',
     'title':'Phrase/Clé',
-    'tutorial':'language/tutorial_FR.txt'
+    'tutorial':'language/tutorial_FR.txt',
+    'db':'Base de donnée'
 }
 ENGLISH_DICT = {
     'key':'Key',
@@ -81,10 +83,12 @@ ENGLISH_DICT = {
     'language':'Language',
     'show_buttons':'Show buttons',
     'hide_buttons':'Hide buttons',
+    'file':'File',
     'options':'Options',
     'display':'Display',
     'title':'Key/Phrase',
-    'tutorial':'language/tutorial_EN.txt'
+    'tutorial':'language/tutorial_EN.txt',
+    'db':'Database'
 }
 #Supported languages
 LANGUAGE_DICT = {
@@ -247,12 +251,60 @@ def get_db_name():
         db_name = get_lang1() + '_' + get_lang2()
     return db_name
 
+def set_db_name(name):
+    if name == 'standard':
+        set_db_type('standard')
+        set_language_pair(None)
+    else:
+        set_db_type('translation')
+        set_language_pair(name.split('_'))
+        
 def get_full_db_path():
     """ Returns full path to db including filename | None -> str """
     folder = get_db_path()
     db_name = get_db_name()
     file_name = db_name + '.pickle'
     return folder / file_name
+
+def first_upper(string, sep = '_'):
+    """ Capitalizes first letters of separated string | str -> str """
+    string_list = string.split(sep)
+    string_list = [name[0].upper() + name[1:] for name in string_list]
+    output_string = sep.join(string_list)
+    return output_string
+
+def get_standard_label():
+    """ Generate display label for standard db | None -> str """
+    language_dict = get_language_dict()
+    return language_dict['key'] + ' --> ' + language_dict['phrase']    
+    
+def get_db_labels():
+    """ Returns list of all database labels | None -> list(str) """
+    standard_label = get_standard_label()
+    db_path = get_db_path()    
+    db_names = [db.stem for db in db_path.iterdir() if db.suffix == '.pickle']
+    db_labels = [to_label(name) for name in db_names if not name == 'standard']
+    db_labels = [standard_label] + db_labels
+    return db_labels
+
+def to_label(file_stem):
+    """ Converts file stem to display label | str -> str """
+    name = first_upper(file_stem)
+    label = ' <--> '.join(name.split('_'))
+    return label
+
+def to_filestem(label):
+    """ Converts display label to file stem | str -> str """
+    if label == get_standard_label():
+        return 'standard'
+    name = '_'.join(label.split(' <--> '))
+    file_stem = name.lower()
+    return file_stem
+    
+def set_database(label):
+    name = to_filestem(label)
+    set_db_name(name)
+    redraw()
 
 def set_backup_path(path=None):
     """ Sets backup directory, creating if necessary | optional:Path -> None """

@@ -144,8 +144,8 @@ class TranslationMainFrame(tk.Frame):
 
     def set_text(self, language_dict):
         """ Sets text of all widgets to config settings | None -> None """
-        self.lang1_label.config(text=language_dict['language_pair'][0])
-        self.lang2_label.config(text=language_dict['language_pair'][1])
+        self.lang1_label.config(text=config.get_lang1())
+        self.lang2_label.config(text=config.get_lang2())
         self.left_button.config(text=language_dict['save'])
         self.right_button.config(text=language_dict['copy'])
     
