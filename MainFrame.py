@@ -1,4 +1,4 @@
-""" Implements the MainFrame class
+""" Implements the MainFrame classAOAOA
 
 Classes: MainFrame
 """

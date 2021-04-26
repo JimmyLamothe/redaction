@@ -6,6 +6,7 @@ Classes: Root
 
 import tkinter as tk
 from tkinter import filedialog
+from PIL import ImageTk, Image
 import config
 import backup
 import Databases
@@ -55,6 +56,9 @@ class Root(tk.Tk):
         self.menu_bar = MenuBar(self)
         self['menu'] = self.menu_bar
         self.title(config.get_language_dict()['title']) #Application name
+        icon = Image.open('icons/30101621.png')
+        icon = ImageTk.PhotoImage(icon)
+        self.iconphoto(True, icon)
         self.set_geometry()
         self.bind_events()
         
@@ -94,7 +98,7 @@ class Root(tk.Tk):
         #self.bind('<Command-c>', lambda x:print('Command-c'))
         #Use above as reference
         pass
-
+    
     def test_command(self, event):
         print(event)
     

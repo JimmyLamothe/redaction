@@ -1,3 +1,7 @@
+TODO: Feature: When saving an entry, put cursor back in other box
+
+TODO: Feature: Switch languages graphically
+
 TODO: Bug: Up - Down in translation mode
 
 TODO: Bug: Geography differences between standard + translation

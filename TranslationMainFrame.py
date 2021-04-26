@@ -363,7 +363,7 @@ class TranslationMainFrame(tk.Frame):
     def load_tutorial(self):
         """ NOT IMPLEMENTED """
         pass
-            
+
     def print_tracker_variables(self):
         print('Key variables:')
         print(f'Key - current_text: {self.key.current_text}')
