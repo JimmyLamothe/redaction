@@ -108,7 +108,7 @@ class Phrase(AutoText):
             self.clear()
             self.display_current()
             
-    def display_phrase(self, key_list):
+    def display_match(self, key_list):
         """ Displays matching phrase using current keys  | None -> None """
         if self.create_list(key_list) == 'VALID KEY':
             #print('Active phrase list:', self.phrase.active_list) #Testing code
@@ -161,7 +161,7 @@ class Language(Phrase):
     def __init__(self, master):
         Phrase.__init__(self, master)
         
-    def display_phrase(self, key):
+    def display_match(self, key):
         """ Displays matching translations for current key  | None -> None """
         print(f'display_phrase({key})')
         if self.create_list(key) == 'VALID KEY':

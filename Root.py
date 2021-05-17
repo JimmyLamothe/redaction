@@ -11,7 +11,8 @@ import config
 import backup
 import Databases
 from MainFrame import MainFrame
-from TranslationMainFrame import TranslationMainFrame
+from NewMainFrame import TranslationMainFrame
+#from TranslationMainFrame import TranslationMainFrame
 from Menus import MenuBar
 from commands import print_tracked_events
 

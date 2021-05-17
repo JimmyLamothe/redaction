@@ -1,3 +1,5 @@
+TODO: Refactoring: Use translation mode as base for program
+
 TODO: Feature: When saving an entry, put cursor back in other box
 
 TODO: Feature: Switch languages graphically
