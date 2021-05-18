@@ -1,4 +1,5 @@
 import tkinter as tk
+from text_utilities import strip_trailing_newline
 
 class AutoText(tk.Text):
     def __init__(self, master, **kwargs):
@@ -17,7 +18,8 @@ class AutoText(tk.Text):
         
     def get_contents(self):
         """ Return text contents of widget | None -> str """
-        return self.get('1.0', tk.END)[:-1] #Remove carriage return
+        raw_contents = self.get('1.0', tk.END)
+        return strip_trailing_newline(raw_contents)
 
     def set_contents(self, contents):
         self.clear()

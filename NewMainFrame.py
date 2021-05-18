@@ -275,22 +275,17 @@ class MainFrame(tk.Frame):
         if suggestion:
             self.master.clipboard_clear()
             self.master.clipboard_append(suggestion)
-        
-    def save_entry(self):
-        """ Save active key/phrase combination to db | None -> None """
-        #Get key and phrase
-        key_list = self.box_1.get_display_key_list()
-        print(key_list)
-        phrase = self.box_2.get_contents()
-        print(phrase)
-        #Save combination
-        self.db.prepare_undo()
-        self.db.save_entry(key_list, phrase)
-        print(self.db)
-        #Clear widgets after save
-        self.box_1.full_clear()
-        self.box_2.full_clear()
 
+    def save_entry(self):
+        """ Save combination to database | None -> None """
+        error_message = 'save_entry must be overridden by subclass'
+        raise NotImplementedError(error_message)
+
+    def delete_entry(self):
+        """ Delete combination from database | None -> None """
+        error_message = 'delete_entry must be overridden by subclass'
+        raise NotImplementedError(error_message)
+    
     def block_new_line(self, event):
         """ Prevent new lines in text box | None -> str """
         print('blocking new line')
@@ -363,11 +358,11 @@ class MainFrame(tk.Frame):
         success = self.box_1.display_match(key) #Display top valid phrase
         if not success: #If no valid phrase with autocompleted Key input:
             self.box_1.full_clear() #Clear phrase display
-        
+
     def suggest_box_2(self):
-        key_list = self.box_1.get_display_key_list() #Includes suggestion if any
-        success = self.box_2.display_match(key_list) #Display top valid phrase
-        if not success: #If no valid phrase with autocompleted key list:
+        key = self.box_1.get_contents() #Includes suggestion if any
+        success = self.box_2.display_match(key) #Display top valid phrase
+        if not success: #If no valid phrase with autocompleted Key input:
             self.box_2.full_clear() #Clear phrase display
 
     def load_tutorial(self):
@@ -392,6 +387,8 @@ class MainFrame(tk.Frame):
         self.master.bind('<Command-c>', lambda event: self.copy())
         self.master.bind('<Control-s>', lambda event: self.save_entry())
         self.master.bind('<Command-s>', lambda event: self.save_entry())
+        self.master.bind('<Control-d>', lambda event: self.delete_entry())
+        self.master.bind('<Command-d>', lambda event: self.delete_entry())
         self.master.bind('<Command-z>', lambda event: self.db.undo())
         self.master.bind('<Control-z>', lambda event: self.db.undo())
         self.master.bind('<Control-y>', lambda event: self.db.redo())
@@ -414,6 +411,143 @@ class MainFrame(tk.Frame):
         self.box_2.bind('<ButtonRelease>', self.handle_box_2_button_release)
         self.box_2.bind('<KeyRelease>', self.handle_box_2_key_release)
 
+class StandardMainFrame(MainFrame):
+    """ Implements the widget interface and logic.
+
+    Displays two text widget with their own internal logic,
+    and four optional buttons.
+    
+    Implements user-input logic not specific to the text widgets.
+    
+    Handles keyboard and mouse events.
+
+    Args:
+        master (tk.Tk): Root object inheriting from tk.Tk
+
+    Methods:
+        create_label_1() -> tk.Label
+        create_label_2() -> tk.Label
+        create_copy_button() -> tk.Button
+        create_save_button() -> tk.Button
+        create_up_button() -> tk.Button
+        create_down_button() -> tk.Button
+        configure_gui()
+        copy()
+        save_entry()
+        handle_key_tab(tk.Event) -> str
+        handle_phrase_tab(tk.Event) -> str
+        handle_key_backspace(tk.Event) -> str
+        handle_phrase_backspace(tk.Event) -> str
+        handle_key_release(tk.Event)
+        handle_phrase_input(tk.Event) - NOT IMPLEMENTED
+        bind_event_handlers()
+    """
+
+    def __init__(self, master):
+        MainFrame.__init__(self, master)
+
+    def configure_gui(self):
+        """ Configures tkinter GUI | None -> None """
+        #Define rows and columns
+        self.columnconfigure(0, weight=1, pad=10)
+        self.columnconfigure(1, weight=100, pad=10)
+        self.rowconfigure(0, weight=0, pad=10)
+        self.rowconfigure(1, weight=100, pad=10)
+        self.master.rowconfigure(0, weight=1)
+        self.master.columnconfigure(0, weight=1)
+        #Place widgets
+        self.label_1.grid(
+            row=0,
+            column=0,
+            pady=(10,0)
+        )
+        self.box_1.grid(
+            row=0,
+            column=1,
+            sticky='ew', #Stretches horizontally with window
+            padx=(0,100),
+            pady=(10,0)
+        )
+        self.label_2.grid(
+            row=1,
+            column=0
+        )
+        self.box_2.grid(
+            row=1,
+            column=1,
+            sticky='nsew', #Stretches with window
+            padx=(0,20),
+            pady=(5,10)
+        )
+        if config.get_show_buttons():
+            self.save_button.grid(
+                row=2,
+                column=1,
+                sticky='w',
+                padx=(20,0),
+                pady=(0,15)
+            )
+            self.copy_button.grid(
+                row=2,
+                column=1,
+                sticky='e',
+                padx=(0,40),
+                pady=(0,15)
+            )
+            self.up_button.grid(
+                row=1,
+                column=2,
+                sticky='n',
+                padx=(0,15),
+                pady=(15,0)
+            )
+            self.down_button.grid(
+                row=1,
+                column=2,
+                sticky='s',
+                padx=(0,15),
+                pady=(0,15)
+            )
+        #Place self in Root object
+        self.grid(
+            row=0,
+            column=0,
+            sticky='nsew' #Stretches with window
+        )
+        self.box_1.focus() #Focus on top text widget
+
+    def save_entry(self):
+        """ Save active key/phrase combination to db | None -> None """
+        #Get key and phrase
+        key_list = self.box_1.get_display_key_list()
+        print(key_list)
+        phrase = self.box_2.get_contents()
+        print(phrase)
+        #Save combination
+        self.db.prepare_undo()
+        self.db.save_entry(key_list, phrase)
+        print(self.db)
+        #Clear widgets after save
+        self.box_1.full_clear()
+        self.box_2.full_clear()
+
+    def delete_entry(self):
+        """ Delete active phrase from db and unused keys | None -> None """
+        phrase = self.box_2.get_contents()
+        self.db.prepare_undo()
+        self.db.delete_phrase(phrase)
+        
+    def suggest_box_2(self):
+        """ Overrides parent method to work with key lists | None -> None """
+        key_list = self.box_1.get_display_key_list() #Includes suggestion if any
+        success = self.box_2.display_match(key_list) #Display top valid phrase
+        if not success: #If no valid phrase with autocompleted key list:
+            self.box_2.full_clear() #Clear phrase display
+
+    def bind_extra_handlers(self):
+        """ Bind event handlers specific to subclass | None -> None """
+        pass
+            
 class TranslationMainFrame(MainFrame):
     """ Implements the widget interface and logic.
 
@@ -507,7 +641,7 @@ class TranslationMainFrame(MainFrame):
         self.box_1.focus() #Focus on key widget
 
     def save_entry(self):
-        """ Save active key/phrase combination to db | None -> None """
+        """ Save active lang1/lang2 combination to db | None -> None """
         #Get key and phrase
         lang1_key = self.box_1.get_contents()
         print(lang1_key)
@@ -521,8 +655,13 @@ class TranslationMainFrame(MainFrame):
         self.box_1.full_clear()
         self.box_2.full_clear()
 
-    def suggest_box_2(self):
-        key = self.box_1.get_contents() #Includes suggestion if any
-        success = self.box_2.display_match(key) #Display top valid phrase
-        if not success: #If no valid phrase with autocompleted Key input:
-            self.box_2.full_clear() #Clear phrase display
+    def delete_entry(self):
+        """ Delete active combination from db | None -> None """
+        lang1_key = self.box_1.get_contents()
+        lang2_key = self.box_2.get_contents()
+        self.db.prepare_undo()
+        self.db.delete_match(lang1_key, lang2_key)
+        
+    def bind_extra_handlers(self):
+        """ Bind event handlers specific to subclass | None -> None """
+        pass

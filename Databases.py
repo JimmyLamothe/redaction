@@ -66,7 +66,7 @@ class Database():
         """ Save contents of database to disk | db.DataFrame -> None """
         self.db.to_pickle(self.get_filepath())
 
-    def initialize_db(self, key_list, phrase):
+    def initialize_db(self, entry_1, entry_2):
         """ Create new database on first startup | -> pd.DataFrame """
         error_message = 'initialize_db must be overridden by subclass'
         raise NotImplementedError(error_message)
@@ -76,8 +76,8 @@ class Database():
         error_message = 'add_column_if_missing must be overridden by subclass'
         raise NotImplementedError(error_message)
 
-    def save_entry(self, key_list, phrase):
-        """ Save new combination to database |  -> None """
+    def save_entry(self, entry_1, entry_2):
+        """ Save new combination to database | str, str -> None """
         error_message = 'save_entry must be overridden by subclass'
         raise NotImplementedError(error_message)
     
@@ -214,7 +214,7 @@ class StandardDatabase(Database):
             print('Found DataFrame')
             if not key_list: #If no keys given
                 try:
-                    self.db = self.db.drop(phrase) #To delete phrase from database
+                    self.db.drop(phrase, inplace=True) #To delete phrase from database
                 except KeyError:
                     return
             self.db.loc[phrase] = False #Initialize row with all False 
@@ -223,6 +223,12 @@ class StandardDatabase(Database):
             self.db.loc[phrase, key_list] = True #Set keys in key_list to True
             self.save()
 
+    def delete_phrase(self, phrase):
+        """ Delete phrase from database and unused keys | str, str -> None """
+        self.db.drop(phrase, inplace=True)
+        self.db = self.db.loc[:, self.db.any()]
+        self.save()
+            
     def get_phrase_series(self):
         """ Gets phrase Series from key DataFrame | None -> pd.Series """
         return self.db.index
@@ -303,9 +309,16 @@ class TranslationDatabase(StandardDatabase):
             self.db.loc[key_lang2, key_lang1] = True #Set key in key_lang1 to True
             self.save()
 
+    def delete_match(self, key_lang1, key_lang2):
+        """ Delete translation match from database | str, str -> None """
+        self.db.loc[key_lang2, key_lang1] = False
+        self.db = self.db.loc[:, self.db.any()]
+        self.db = self.db.loc[self.db.any(axis=1),:]
+        self.save()
+
     def get_lang1_keys(self):
         """ Gets list of keys for language 1 | None -> np.Array """
-        return list(self.columns.values)
+        return list(self.db.columns.values)
             
     def get_lang2_keys(self):
         """ Gets list of keys for language 2 | None -> np.Array """

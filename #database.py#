@@ -76,12 +76,6 @@ def initialize_db(key_list, phrase):
                                     columns=key_list)
     db.to_pickle(config.get_full_db_path())
 
-def strip_trailing_newline(string):
-    """ Removes last character recursively while it's a new line | str -> str """
-    if string[-1] in ['\n','\r']:
-        return strip_trailing_newline(string[:-1])
-    return string
-    
 def save_entry(key_list, phrase):
     """ Save new key/phrase combination to database | list(str), str -> None """
     global db

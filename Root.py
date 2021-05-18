@@ -10,7 +10,8 @@ from PIL import ImageTk, Image
 import config
 import backup
 import Databases
-from MainFrame import MainFrame
+from NewMainFrame import MainFrame
+#from MainFrame import MainFrame
 from NewMainFrame import TranslationMainFrame
 #from TranslationMainFrame import TranslationMainFrame
 from Menus import MenuBar
