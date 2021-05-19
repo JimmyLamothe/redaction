@@ -1,0 +1,268 @@
+""" Implements the Phrase and Language class
+
+This class contains all methods and attributes for the Phrase widget.
+The Language class is a subclass of the Phrase class with the main difference
+being that it works with single keys instead of key lists.
+
+Classes: Phrase, Language
+"""
+
+import tkinter as tk
+from AutoText import AutoText
+import config
+
+class Phrase(AutoText):
+    """ Implements the interface and logic for the Phrase text widget
+
+    The Phrase text widget is where the user types a phrase to be saved
+    and associated with the keys entered in the Key widget.
+
+    It is also where the top-ranked phrase associated with the current
+    keys is displayed. Ranking is not currently implemented
+
+    It will also be used as a general display for menu help info and startup
+    messages.
+
+    Args:
+        master (tk.Frame): MainFrame object inheriting from tk.Frame 
+
+    Methods:
+        __init__(MainFrame)
+        get_contents()
+        create_list(list)
+        clear()
+        get_cursor()
+        set_cursor(int, int)
+        search_forwards(str)
+        search_backwards(str)
+        delete_word()
+        display_current()
+        not_last_index()
+        next()
+        not_first_index()
+        previous()
+        display_phrase(list)
+    """
+    
+    def __init__(self, master):
+        AutoText.__init__(
+            self,
+            master=master, #MainFrame object
+            wrap=tk.WORD,
+            relief=tk.RIDGE,
+            bg='#F5F5F5',#FFFFFF in put mode
+            borderwidth=3, #2 in put mode
+            highlightbackground='#EEEEEE',
+            highlightcolor='#EEEEEE', #No border on focus
+        )
+        self.db = config.active_objects['db']
+        self.active_list=None, #Current valid phrases for current keys
+        self.active_list_index=None #Current active_list index
+        
+    def create_list(self, key_list):
+        """ Get list of valid phrases for key list | list(str) -> None """
+        if key_list and not key_list == ['']:
+            print('key list', key_list)
+            phrase_list = self.db.get_phrase_list(key_list)
+            if phrase_list:
+                self.active_list = phrase_list
+                self.active_list_index = 0
+                return 'VALID KEY'
+        return 'INVALID KEY'
+
+    def display_current(self):
+        """ Display current active phrase | None -> None """
+        self.insert('1.0', self.active_list[self.active_list_index])
+
+    def not_last_index(self):
+        """ If current self.active_list index isn't the last | None -> Bool """
+        if self.active_list:
+            print(self.active_list)
+            print(self.active_list_index)
+            return False
+            if self.active_list_index < (len(self.active_list) - 1):
+                return True
+        return False
+
+    def next(self):
+        """ Displays next phrase in self.active_list | None -> None """
+        if self.not_last_index():
+            self.active_list_index += 1
+            self.clear()
+            self.display_current()
+            
+    def not_first_index(self):
+        """ If current self.active_list index isn't the first | None -> Bool """
+        if self.active_list:
+            print(self.active_list)
+            print(self.active_list_index)
+            return False
+            if self.active_list_index >= 1:
+                return True
+        return False
+            
+    def previous(self):
+        """ Displays previous phrase in self.active_list | None -> None """
+        if self.not_first_index():
+            self.active_list_index -= 1
+            self.clear()
+            self.display_current()
+            
+    def display_match(self, key_list):
+        """ Displays matching phrase using current keys  | None -> None """
+        if self.create_list(key_list) == 'VALID KEY':
+            #print('Active phrase list:', self.phrase.active_list) #Testing code
+            self.clear()
+            self.display_current()
+            return True
+        else:
+            self.clear()
+            return False
+
+    def get_suggestion(self):
+        """ Complete current input with valid phrase from db | None -> None """
+        self.debug('get_suggestion')
+        partial_phrase = self.current_text #Get partial phrase
+        print(f'partial_phrase: {partial_phrase}, len: {len(partial_phrase)}')
+        if self.suggestion_list: #If suggestion list exists, keep it
+            suggestion_list = self.suggestion_list
+        else: #Otherwise get all phrases starting with partial_phrase
+            suggestion_list = self.db.valid_phrases(partial_phrase)
+            suggestion_list = [s for s in suggestion_list if not s == partial_phrase]
+        print('suggestion_list', suggestion_list)
+        if suggestion_list: #If current input can be completed with a valid phrase: 
+            suggestion = suggestion_list[0] #TODO: Rank suggestions
+            print('suggestion', suggestion)
+            #Save suggested chars
+            self.suggestion_text = suggestion[len(partial_phrase):]
+            self.suggestion_list = suggestion_list
+            self.update_display()
+        self.debug('get_suggestion', out=True)
+
+    def get_saved_keys(self):
+        """ Get saved keys if any for current user input | None -> None """
+        phrase = self.current_text
+        saved_keys = self.db.saved_keys(phrase)
+        return saved_keys
+        
+    def debug(self, name, out=False):
+        if not config.config_dict['debug']:
+            return
+        super().debug(name, out=out)
+
+class Language(Phrase):
+    """ Abstract class for Language widgets. 
+
+    Must be subclassed to be instantiated because database differentiates
+    between language 1 and language 2.
+    Language 1 keys -> database columns
+    Language 2 keys -> database index.
+    """
+    def __init__(self, master):
+        Phrase.__init__(self, master)
+        
+    def display_match(self, key):
+        """ Displays matching translations for current key  | None -> None """
+        print(f'display_phrase({key})')
+        if self.create_list(key) == 'VALID KEY':
+            #print('Active phrase list:', self.phrase.active_list) #Testing code
+            self.clear()
+            self.display_current()
+            return True
+        else:
+            self.clear()
+            return False
+
+    def create_list(self, key):
+        """ Get list of valid translations for key | list(str) -> None """
+        match_list = self.get_matches(key)
+        print('match_list =', match_list)
+        if match_list:
+            self.active_list = match_list
+            self.active_list_index = 0
+            return 'VALID KEY'
+        return 'INVALID KEY'
+        
+class Language1(Language):
+    """ Class for language 1 widget. Corresponds to TranslationDatabase columns """
+    def __init__(self, master):
+        Language.__init__(self, master)
+        self.config(height=1)
+        self.config(bg='#FFFFFF')
+
+    def get_suggestion(self):
+        """ Complete current input with valid key from db | None -> None """
+        self.debug('get_suggestion')
+        partial_key = self.current_text #Get partial phrase
+        print(f'partial_key: {partial_key}, len: {len(partial_key)}')
+        if self.suggestion_list: #If suggestion list exists, keep it
+            suggestion_list = self.suggestion_list
+        else: #Otherwise get all keys starting with partial_key
+            suggestion_list = self.db.valid_lang1_keys(partial_key)
+            suggestion_list = [s for s in suggestion_list if not s == partial_key]
+        print('suggestion_list', suggestion_list)
+        if suggestion_list: #If current input can be completed with a valid key: 
+            suggestion = suggestion_list[0] #TODO: Rank suggestions
+            print('suggestion', suggestion)
+            #Save suggested chars
+            self.suggestion_text = suggestion[len(partial_key):]
+            self.suggestion_list = suggestion_list
+            self.update_display()
+        self.debug('get_suggestion', out=True)
+
+    def get_saved_keys(self):
+        """ Get lang2 match if any for current user input | None -> None """
+        key = self.current_text
+        print('key:', key)
+        matches = self.db.get_lang2_matches(key)
+        print('matches:', matches)
+        return matches
+
+    def get_matches(self, key):
+        print('key', key)
+        matches = self.db.get_lang1_matches(key)
+        print('matches', matches)
+        print(self.db)
+        return matches
+    
+class Language2(Language):
+    """ Class for language 2 widget. Corresponds to TranslationDatabase index """
+    def __init__(self, master):
+        Language.__init__(self, master)
+        self.config(height=1)
+        self.config(bg='#FFFFFF')
+
+    def get_suggestion(self):
+        """ Complete current input with valid key from db | None -> None """
+        self.debug('get_suggestion')
+        partial_key = self.current_text #Get partial phrase
+        print(f'partial_key: {partial_key}, len: {len(partial_key)}')
+        if self.suggestion_list: #If suggestion list exists, keep it
+            suggestion_list = self.suggestion_list
+        else: #Otherwise get all phrases starting with partial_key
+            suggestion_list = self.db.valid_lang2_keys(partial_key)
+            suggestion_list = [s for s in suggestion_list if not s == partial_key]
+        print('suggestion_list', suggestion_list)
+        if suggestion_list: #If current input can be completed with a valid phrase: 
+            suggestion = suggestion_list[0] #TODO: Rank suggestions
+            print('suggestion', suggestion)
+            #Save suggested chars
+            self.suggestion_text = suggestion[len(partial_key):]
+            self.suggestion_list = suggestion_list
+            self.update_display()
+        self.debug('get_suggestion', out=True)
+
+    def get_saved_keys(self):
+        """ Get lang1 match if any for current user input | None -> None """
+        key = self.current_text
+        print('key:', key)
+        matches = self.db.get_lang1_matches(key)
+        print('matches:', matches)
+        return matches
+
+    def get_matches(self, key):
+        print('key', key)
+        matches = self.db.get_lang2_matches(key)
+        print('matches', matches)
+        print(self.db)
+        return matches

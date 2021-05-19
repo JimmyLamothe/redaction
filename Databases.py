@@ -241,6 +241,13 @@ class StandardDatabase(Database):
         except KeyError:
             return None
 
+    def get_matching_keys(self, phrase):
+        """ Get matching keys for phrase if any | str -> list(str) """
+        try:
+            return list(self.db.loc[phrase,self.db.loc[phrase,:]].index)
+        except KeyError:
+            return []
+        
     def valid_keys(self, partial_key):
         """ Get list of db keys starting with specific string | str -> list(str) """
         if partial_key:

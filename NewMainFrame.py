@@ -354,16 +354,12 @@ class MainFrame(tk.Frame):
             self.suggest_box_1()
         
     def suggest_box_1(self):
-        key = self.box_2.get_contents() #Includes suggestion if any
-        success = self.box_1.display_match(key) #Display top valid phrase
-        if not success: #If no valid phrase with autocompleted Key input:
-            self.box_1.full_clear() #Clear phrase display
+        error_message = 'suggest_box_1 must be overridden by subclass'
+        raise NotImplementedError(error_message)
 
     def suggest_box_2(self):
-        key = self.box_1.get_contents() #Includes suggestion if any
-        success = self.box_2.display_match(key) #Display top valid phrase
-        if not success: #If no valid phrase with autocompleted Key input:
-            self.box_2.full_clear() #Clear phrase display
+        error_message = 'suggest_box_2 must be overridden by subclass'
+        raise NotImplementedError(error_message)
 
     def load_tutorial(self):
         """ NOT IMPLEMENTED """
@@ -536,7 +532,13 @@ class StandardMainFrame(MainFrame):
         phrase = self.box_2.get_contents()
         self.db.prepare_undo()
         self.db.delete_phrase(phrase)
-        
+
+    def suggest_box_1(self):
+        phrase = self.box_2.get_contents() #Includes suggestion if any
+        success = self.box_1.display_matching_keys(phrase) #Display matching keys
+        if not success: #If no valid autocompleted phrase:
+            self.box_1.full_clear() #Clear key display
+
     def suggest_box_2(self):
         """ Overrides parent method to work with key lists | None -> None """
         key_list = self.box_1.get_display_key_list() #Includes suggestion if any
@@ -661,6 +663,18 @@ class TranslationMainFrame(MainFrame):
         lang2_key = self.box_2.get_contents()
         self.db.prepare_undo()
         self.db.delete_match(lang1_key, lang2_key)
+
+    def suggest_box_1(self):
+        key = self.box_2.get_contents() #Includes suggestion if any
+        success = self.box_1.display_match(key) #Display top valid phrase
+        if not success: #If no valid phrase with autocompleted Key input:
+            self.box_1.full_clear() #Clear phrase display
+
+    def suggest_box_2(self):
+        key = self.box_1.get_contents() #Includes suggestion if any
+        success = self.box_2.display_match(key) #Display top valid phrase
+        if not success: #If no valid phrase with autocompleted Key input:
+            self.box_2.full_clear() #Clear phrase display
         
     def bind_extra_handlers(self):
         """ Bind event handlers specific to subclass | None -> None """

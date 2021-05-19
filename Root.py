@@ -10,7 +10,7 @@ from PIL import ImageTk, Image
 import config
 import backup
 import Databases
-from NewMainFrame import MainFrame
+from NewMainFrame import StandardMainFrame
 #from MainFrame import MainFrame
 from NewMainFrame import TranslationMainFrame
 #from TranslationMainFrame import TranslationMainFrame
@@ -52,7 +52,7 @@ class Root(tk.Tk):
         backup.backup()
         self.option_add('*Font', 'TkDefaultFont') #All widgets use default font
         if db_type == 'standard':
-            self.main_frame = MainFrame(self)
+            self.main_frame = StandardMainFrame(self)
         else:
             self.main_frame = TranslationMainFrame(self)
         self.menu_bar = MenuBar(self)

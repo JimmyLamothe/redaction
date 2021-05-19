@@ -73,6 +73,16 @@ class Key(AutoText):
     def get_display_key_list(self):
         """ Get list of keys from Key display string | None -> list """
         return self.get_key_list(self.get_contents())
+
+    def display_matching_keys(self, phrase):
+        matching_keys_list = self.db.get_matching_keys(phrase)
+        matching_keys_string = ' '.join(matching_keys_list)
+        print(f'matching keys: {matching_keys_string}')
+        if matching_keys_string:
+            self.current_text = matching_keys_string
+            self.set_contents(self.current_text)
+            return True
+        return False
     
     def get_suggestion(self):
         """ Complete current key input with valid keys from db | None -> None """

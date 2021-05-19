@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """ Main module for Key/Phrase. Run from the console. """
 
 
