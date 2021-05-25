@@ -1,0 +1,50 @@
+Functionality:
+	- Autocomplete is displayed in gray
+	- Autocomplete is only called when character is typed after end of last word
+	- Changing the cursor position deletes the suggestion
+
+Attributes:
+	- current_text = str
+	- current_cursor = int
+	- suggestion_text = str
+	- suggestion_active = bool
+
+Methods:
+	- cursor_at_end -> bool
+	- cursor_moved -> str or bool
+	- ignore_suggestion
+	- confirm_suggestion
+	- get_difference -> str
+	
+Concept:
+	If not suggestion_active:
+	   If char received and cursor_at_end, call autocomplete
+	If suggestion active:
+   	    On click, call cursor_moved:
+	       - If cursor did not move, pass
+	       - If cursor moved left, call ignore_suggestion
+	       - If cursor moved right, call confirm_suggestion up to cursor
+	    On key input, check if char received:
+	       - If not char received, call cursor moved
+	       - If cursor moved left, call ignore_suggestion, break
+	       - If cursor moved right, call confirm_suggestion up to cursor
+	    On char_received, if suggestion_active, call get_difference:
+	       - Gets display text
+	       - Removes last characters = len(suggestion_text)
+	       - Removes first characters = len(current_text)
+	       - Returns remaining characters as current_input
+
+	    If not len(current_input) == 1:
+	       - Call ignore_suggestion, break
+	    If current_input == suggestion_text[0]:
+	       - Call confirm_suggestion, break
+	    Call autocomplete
+
+	    When called, autocomplete:
+	       - Calls ignore suggestion (deletes suggestion from display)
+	       - Gets new suggestion
+	       - Displays it in gray
+
+
+TODO: Test for speed. If too slow, need to add cursor position checks
+      to protect fast typists.

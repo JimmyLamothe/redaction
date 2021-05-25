@@ -1,3 +1,5 @@
+TODO: Tests: Write tests
+
 TODO: Feature: Remember db-specific graphical state
 
 TODO: Refactoring: Use translation mode as base for program
