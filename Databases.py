@@ -244,7 +244,8 @@ class StandardDatabase(Database):
     def get_matching_keys(self, phrase):
         """ Get matching keys for phrase if any | str -> list(str) """
         try:
-            return list(self.db.loc[phrase,self.db.loc[phrase,:]].index)
+            row = self.db.loc[phrase, :]
+            return list(row[row==True].index)
         except KeyError:
             return []
         
@@ -260,14 +261,6 @@ class StandardDatabase(Database):
         if partial_phrase:
             return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
         return []
-
-    def saved_keys(self, phrase):
-        """ Get list of db keys for specific phrase | None -> list(str) """
-        try:
-            row = self.db.loc[phrase, :]
-            return list(row[row==True].index)
-        except KeyError:
-            return []
 
 class TranslationDatabase(StandardDatabase):
     """
