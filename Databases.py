@@ -213,10 +213,8 @@ class StandardDatabase(Database):
         else:
             print('Found DataFrame')
             if not key_list: #If no keys given
-                try:
-                    self.db.drop(phrase, inplace=True) #To delete phrase from database
-                except KeyError:
-                    return
+                self.delete_phrase(phrase)
+                return
             self.db.loc[phrase] = False #Initialize row with all False 
             for key in key_list:
                 self.add_column_if_missing(key) #Add missing new keys 
@@ -225,9 +223,12 @@ class StandardDatabase(Database):
 
     def delete_phrase(self, phrase):
         """ Delete phrase from database and unused keys | str, str -> None """
-        self.db.drop(phrase, inplace=True)
-        self.db = self.db.loc[:, self.db.any()]
-        self.save()
+        try:
+            self.db.drop(phrase, inplace=True)
+            self.db = self.db.loc[:, self.db.any()]
+            self.save()
+        except KeyError:
+            pass
             
     def get_phrase_series(self):
         """ Gets phrase Series from key DataFrame | None -> pd.Series """
@@ -235,14 +236,21 @@ class StandardDatabase(Database):
             
     def get_phrase_list(self, key_list):
         """ Get list of valid phrases for a list of keys | list(str) -> list(str) """
+        if not key_list:
+            return None
         try:
             index = self.db.loc[self.db[key_list].all(axis=1), :].index
-            return list(index.values)
+            if list(index.values):
+                return list(index.values)
+            else:
+                return None
         except KeyError:
             return None
 
     def get_matching_keys(self, phrase):
         """ Get matching keys for phrase if any | str -> list(str) """
+        if not phrase:
+            return []
         try:
             row = self.db.loc[phrase, :]
             return list(row[row==True].index)
@@ -251,14 +259,14 @@ class StandardDatabase(Database):
         
     def valid_keys(self, partial_key):
         """ Get list of db keys starting with specific string | str -> list(str) """
-        if partial_key:
+        if partial_key: #Not case specific
             mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
             return list(self.db.columns[mask])
         return []
 
     def valid_phrases(self, partial_phrase):
         """ Get list of db phrases starting with specific string | str -> list(str) """
-        if partial_phrase:
+        if partial_phrase: #Case specific
             return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
         return []
 

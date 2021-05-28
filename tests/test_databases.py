@@ -2,137 +2,153 @@
 
 Tests not written for all methods. Add more as bugs arise.
 """
-import shutil
 import pytest
 import config
 from Databases import StandardDatabase, TranslationDatabase
 
-original_standard_filepath = StandardDatabase().get_filepath()
+reference_standard_filepath = StandardDatabase().get_filepath()
 
-original_translation_filepath = TranslationDatabase('français', 'anglais').get_filepath()
+reference_translation_filepath = TranslationDatabase('français', 'anglais').get_filepath()
+
+def get_standard_test_filepath(*args): #will replace instance method
+    folder = config.get_db_path()
+    extension = '.pickle'
+    filename = 'test_standard_db' + extension
+    filepath = folder / filename
+    return filepath
 
 @pytest.fixture(autouse=True)
 def mock_get_standard_filepath(monkeypatch):
     """ Get filepath of standard test database file | None -> Path """
-    def get_test_filepath(self):
-        folder = config.get_db_path()
-        extension = '.pickle'
-        filename = 'test_standard_db' + extension
-        filepath = folder / filename
-        return filepath
+    monkeypatch.setattr(StandardDatabase, 'get_filepath', get_standard_test_filepath)
 
-    monkeypatch.setattr(StandardDatabase, 'get_filepath', get_test_filepath)
-
+def get_translation_test_filepath(*args): #will replace instance method
+    folder = config.get_db_path()
+    extension = '.pickle'
+    filename = 'test_translation_db' + extension
+    filepath = folder / filename
+    return filepath
+    
 @pytest.fixture(autouse=True)
 def mock_get_translation_filepath(monkeypatch):
     """ Get filepath of translation test database file | None -> Path """
-    def get_test_filepath(self):
-        folder = config.get_db_path()
-        extension = '.pickle'
-        filename = 'test_translation_db' + extension
-        filepath = folder / filename
-        return filepath
-
-    monkeypatch.setattr(TranslationDatabase, 'get_filepath', get_test_filepath)
-
-def restore_standard_db(test_db):
-    shutil.copy2(original_standard_filepath, test_db.get_filepath())
-
-def restore_translation_filepath(test_db):
-    shutil.copy2(original_translation_filepath, test_db.get_filepath())
+    monkeypatch.setattr(TranslationDatabase, 'get_filepath',
+                        get_translation_test_filepath)
     
-def test_standard_get_filepath():
-    test_db = StandardDatabase()
-    expected_output = '/Users/jimmy/Library/Application Support/KeyPhrase/db/'
-    expected_output += 'test_standard_db.pickle'
-    assert str(test_db.get_filepath()) == expected_output
- 
-def test_translation_get_filepath():
-    test_db = TranslationDatabase('lang1', 'lang2')
-    expected_output = '/Users/jimmy/Library/Application Support/KeyPhrase/db/'
-    expected_output += 'test_translation_db.pickle'
-    assert str(test_db.get_filepath()) == expected_output
+def delete_standard_test_db():
+    test_db = get_standard_test_filepath()
+    try:
+        test_db.unlink()
+        print('deleted standard test db')
+    except FileNotFoundError:
+        print('No standard test db to delete')
+
+def delete_translation_test_db():
+    test_db = get_translation_test_filepath()
+    try:
+        test_db.unlink()
+        print('deleted translation test db')
+    except FileNotFoundError:
+        print('No translation test db to delete')
+
+def delete_test_db(func):
+    """ Decorator to delete test dbs after testing | func -> func """
+    def decorator(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        finally:
+            delete_standard_test_db()
+            delete_translation_test_db()
+    return decorator
 
 def get_index(db):
-    return list(db.index.values)
+    return list(db.db.index.values)
 
 def get_columns(db):
-    return list(db.columns.values)
+    return list(db.db.columns.values)
 
+def compare_db(db1, db2):
+    if get_index(db1) == get_index(db2):
+        if get_columns(db1) == get_columns(db2):
+            return True
+    return False
+
+def standard_test_db():
+    test_db = StandardDatabase()
+    test_db.save_entry(['a','b'],'phrase 1')
+    test_db.save_entry(['c','d'],'phrase 2')
+    return test_db
+
+@delete_test_db
 def test_standard_save_entry():
-    test_db = StandardDatabase()
-    pre_index = get_index(test_db.db)
-    pre_columns = get_columns(test_db.db)
-    test_db.save_entry(['key1', 'key2'], '')
-    assert pre_index == get_index(test_db.db)
-    assert pre_columns == get_columns(test_db.db)
-    return
-    if self.db.empty: #If first entry, initialize new database
-        self.initialize_db(key_list, phrase)
-        self.save_entry(key_list, phrase)
-    test_db.save_entry([],'baba')
-    assert [key for key in pre_columns
-            if not key == 'baba'] == get_columns(test_db.db)
+    test_db = standard_test_db()
+    assert get_index(test_db) == ['phrase 1','phrase 2']
+    assert get_columns(test_db) == ['a','b','c','d']
+    test_db.save_entry([],'phrase 2')
+    assert get_index(test_db) == ['phrase 1']
+    assert get_columns(test_db) == ['a','b']
     test_db.save_entry([], 'not_in_db')
-    assert pre_columns == get_columns(test_db.db)
-    test_db.save_entry(['a', 'voila', 'new_key'], 'new_phrase')
-    assert pre_columns + ['new_phrase'] == get_columns(test_db.db)
-    assert pre_index + ['new_key'] == get_index(test_db.db)
-    assert test_db.get_matching_keys('new_phrase') == ['a', 'voila', 'new_key']
-    restore_standard_db(test_db)
-    
+    assert get_index(test_db) == ['phrase 1']
+    assert get_columns(test_db) == ['a','b']
+    test_db.save_entry(['key_1', 'a', 'key_2'], 'new_phrase')
+    assert get_index(test_db) == ['phrase 1', 'new_phrase']
+    assert get_columns(test_db) == ['a','b', 'key_1', 'key_2']
+
+@delete_test_db
 def test_standard_delete_phrase():
-    test_db = StandardDatabase()
-    pre_index = get_index(test_db.db)
-    pre_columns = get_columns(test_db.db)
-    test_db.delete_phrase('baba')
-    assert pre_index == get_index(test_db.db) + ['a']
-    assert pre_columns == ['baba'] + get_columns(test_db.db)
+    test_db = standard_test_db()
+    assert get_index(test_db) == ['phrase 1','phrase 2']
+    assert get_columns(test_db) == ['a','b','c','d']
+    test_db.delete_phrase('')
+    assert get_index(test_db) == ['phrase 1','phrase 2']
+    assert get_columns(test_db) == ['a','b','c','d']
+    test_db.delete_phrase('afgasdfg')
+    assert get_index(test_db) == ['phrase 1','phrase 2']
+    assert get_columns(test_db) == ['a','b','c','d']
+    test_db.delete_phrase('phrase 1')
+    assert get_index(test_db) == ['phrase 2']
+    assert get_columns(test_db) == ['c','d']
 
-def test_restore_standard_db():
-    """ Not a real test, just to restore db after tests """
-    restore_standard_db(StandardDatabase())
-    assert True
-    
-def _test_standard_get_phrase_series(self):
-    """ Gets phrase Series from key DataFrame | None -> pd.Series """
-    return self.db.index
+@delete_test_db
+def test_standard_get_phrase_list():
+    test_db = standard_test_db()
+    assert test_db.get_phrase_list([]) == None
+    assert test_db.get_phrase_list(['a']) == ['phrase 1']
+    assert test_db.get_phrase_list(['c']) == ['phrase 2']
+    assert test_db.get_phrase_list(['a','b']) == ['phrase 1']
+    assert test_db.get_phrase_list(['a','c']) == None
+    assert test_db.get_phrase_list(['e','f']) == None
 
-def _test_standard_get_phrase_list(self, key_list):
-    """ Get list of valid phrases for a list of keys | list(str) -> list(str) """
-    try:
-        index = self.db.loc[self.db[key_list].all(axis=1), :].index
-        return list(index.values)
-    except KeyError:
-        return None
+@delete_test_db
+def test_standard_get_matching_keys():
+    test_db = standard_test_db()
+    assert test_db.get_matching_keys('') == []
+    assert test_db.get_matching_keys('phrase 1') == ['a','b']
+    assert test_db.get_matching_keys('phrase 2') == ['c','d']
+    assert test_db.get_matching_keys('afgasfgasdfg') == []
 
-def _test_standard_get_matching_keys(self, phrase):
-    """ Get matching keys for phrase if any | str -> list(str) """
-    try:
-        return list(self.db.loc[phrase,self.db.loc[phrase,:]].index)
-    except KeyError:
-        return []
+@delete_test_db    
+def test_standard_valid_keys():
+    test_db = standard_test_db()
+    test_db.save_entry(['allo_allo', 'zenitude'], 'phrase 3')
+    assert test_db.valid_keys('f') == []
+    assert test_db.valid_keys('b') == ['b']
+    assert test_db.valid_keys('a') == ['a', 'allo_allo']
+    assert test_db.valid_keys('A') == ['a', 'allo_allo']
+    assert test_db.valid_keys('zen') == ['zenitude']
+    assert test_db.valid_keys('allo_allo') == ['allo_allo']
+    assert test_db.valid_keys('') == []
 
-def _test_standard_valid_keys(self, partial_key):
-    """ Get list of db keys starting with specific string | str -> list(str) """
-    if partial_key:
-        mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
-        return list(self.db.columns[mask])
-    return []
-
-def _test_standard_valid_phrases(self, partial_phrase):
-    """ Get list of db phrases starting with specific string | str -> list(str) """
-    if partial_phrase:
-        return list(self.db.index[self.db.index.str.startswith(partial_phrase)])
-    return []
-
-def _test_standard_saved_keys(self, phrase):
-    """ Get list of db keys for specific phrase | None -> list(str) """
-    try:
-        row = self.db.loc[phrase, :]
-        return list(row[row==True].index)
-    except KeyError:
-        return []
+@delete_test_db    
+def test_standard_valid_phrases():
+    test_db = standard_test_db()
+    test_db.save_entry(['a'], 'Bla bla \n bla bla')
+    assert test_db.valid_phrases('p') == ['phrase 1', 'phrase 2']
+    assert test_db.valid_phrases('r') == []
+    assert test_db.valid_phrases('phrase ') == ['phrase 1', 'phrase 2']
+    assert test_db.valid_phrases('phrase 1') == ['phrase 1']
+    assert test_db.valid_phrases('B') == ['Bla bla \n bla bla']
+    assert test_db.valid_phrases('') == []
 
 def _test_translation_save_entry(self, key_lang1, key_lang2):
     """ Save new translation to database | str, str -> None """
