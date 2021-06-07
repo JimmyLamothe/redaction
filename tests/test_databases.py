@@ -61,12 +61,6 @@ def delete_test_db(func):
             delete_translation_test_db()
     return decorator
 
-def get_index(db):
-    return list(db.db.index.values)
-
-def get_columns(db):
-    return list(db.db.columns.values)
-
 def compare_db(db1, db2):
     if get_index(db1) == get_index(db2):
         if get_columns(db1) == get_columns(db2):
@@ -80,34 +74,42 @@ def standard_test_db():
     return test_db
 
 @delete_test_db
+def test_standard_add_column_if_missing():
+    test_db = standard_test_db()
+    test_db.add_column_if_missing('e')
+    assert test_db.get_index() == ['phrase 1', 'phrase 2']
+    assert test_db.get_columns() == ['a', 'b', 'c', 'd', 'e']
+    assert test_db.db['e'].any() == False
+
+@delete_test_db
 def test_standard_save_entry():
     test_db = standard_test_db()
-    assert get_index(test_db) == ['phrase 1','phrase 2']
-    assert get_columns(test_db) == ['a','b','c','d']
+    assert test_db.get_index() == ['phrase 1','phrase 2']
+    assert test_db.get_columns() == ['a','b','c','d']
     test_db.save_entry([],'phrase 2')
-    assert get_index(test_db) == ['phrase 1']
-    assert get_columns(test_db) == ['a','b']
+    assert test_db.get_index() == ['phrase 1']
+    assert test_db.get_columns() == ['a','b']
     test_db.save_entry([], 'not_in_db')
-    assert get_index(test_db) == ['phrase 1']
-    assert get_columns(test_db) == ['a','b']
+    assert test_db.get_index() == ['phrase 1']
+    assert test_db.get_columns() == ['a','b']
     test_db.save_entry(['key_1', 'a', 'key_2'], 'new_phrase')
-    assert get_index(test_db) == ['phrase 1', 'new_phrase']
-    assert get_columns(test_db) == ['a','b', 'key_1', 'key_2']
+    assert test_db.get_index() == ['phrase 1', 'new_phrase']
+    assert test_db.get_columns() == ['a','b', 'key_1', 'key_2']
 
 @delete_test_db
 def test_standard_delete_phrase():
     test_db = standard_test_db()
-    assert get_index(test_db) == ['phrase 1','phrase 2']
-    assert get_columns(test_db) == ['a','b','c','d']
+    assert test_db.get_index() == ['phrase 1','phrase 2']
+    assert test_db.get_columns() == ['a','b','c','d']
     test_db.delete_phrase('')
-    assert get_index(test_db) == ['phrase 1','phrase 2']
-    assert get_columns(test_db) == ['a','b','c','d']
+    assert test_db.get_index() == ['phrase 1','phrase 2']
+    assert test_db.get_columns() == ['a','b','c','d']
     test_db.delete_phrase('afgasdfg')
-    assert get_index(test_db) == ['phrase 1','phrase 2']
-    assert get_columns(test_db) == ['a','b','c','d']
+    assert test_db.get_index() == ['phrase 1','phrase 2']
+    assert test_db.get_columns() == ['a','b','c','d']
     test_db.delete_phrase('phrase 1')
-    assert get_index(test_db) == ['phrase 2']
-    assert get_columns(test_db) == ['c','d']
+    assert test_db.get_index() == ['phrase 2']
+    assert test_db.get_columns() == ['c','d']
 
 @delete_test_db
 def test_standard_get_phrase_list():
@@ -150,6 +152,12 @@ def test_standard_valid_phrases():
     assert test_db.valid_phrases('B') == ['Bla bla \n bla bla']
     assert test_db.valid_phrases('') == []
 
+def translation_test_db():
+    test_db = TranslationDatabase('Français','English')
+    test_db.save_entry('mouton','lamb')
+    test_db.save_entry('porc', 'pork')
+    return test_db
+    
 def _test_translation_save_entry(self, key_lang1, key_lang2):
     """ Save new translation to database | str, str -> None """
     if not key_lang1 or not key_lang2: #To prevent accidental empty entry
@@ -165,56 +173,122 @@ def _test_translation_save_entry(self, key_lang1, key_lang2):
             self.db.loc[key_lang2, key_lang1] = True #Set key in key_lang1 to True
             self.save()
 
-def _test_translation_delete_match(self, key_lang1, key_lang2):
-    """ Delete translation match from database | str, str -> None """
-    self.db.loc[key_lang2, key_lang1] = False
-    self.db = self.db.loc[:, self.db.any()]
-    self.db = self.db.loc[self.db.any(axis=1),:]
-    self.save()
+@delete_test_db
+def test_translation_add_row_if_missing():
+    test_db = translation_test_db()
+    test_db.add_row_if_missing('chicken')
+    assert test_db.get_index() == ['lamb', 'pork', 'chicken']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    assert test_db.db.loc['chicken'].any() == False
 
-def _test_translation_get_lang1_keys(self):
-    """ Gets list of keys for language 1 | None -> np.Array """
-    return list(self.db.columns.values)
+@delete_test_db
+def test_translation_add_column_if_missing():
+    test_db = translation_test_db()
+    test_db.add_column_if_missing('poulet')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc', 'poulet']
+    assert test_db.db['poulet'].any() == False
+            
+@delete_test_db
+def test_translation_save_entry():
+    test_db = translation_test_db()
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.save_entry('', '')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.save_entry('nouveau', '')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.save_entry('', 'new')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.save_entry('boeuf', 'beef')
+    assert test_db.get_index() == ['lamb', 'pork', 'beef']
+    assert test_db.get_columns() == ['mouton', 'porc', 'boeuf']
+    test_db.save_entry('mouton', 'mutton')
+    assert test_db.get_index() == ['lamb', 'pork', 'beef', 'mutton']
+    assert test_db.get_columns() == ['mouton', 'porc', 'boeuf']
 
-def _test_translation_get_lang2_keys(self):
-    """ Gets list of keys for language 2 | None -> np.Array """
-    return list(self.db.index.values)
+@delete_test_db
+def test_translation_delete_match():
+    test_db = translation_test_db()
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.delete_match('', '')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.delete_match('nouveau', '')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.delete_match('', 'new')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.delete_match('boeuf', '')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.delete_match('', 'beef')
+    assert test_db.get_index() == ['lamb', 'pork']
+    assert test_db.get_columns() == ['mouton', 'porc']
+    test_db.delete_match('porc', 'pork')
+    assert test_db.get_index() == ['lamb']
+    assert test_db.get_columns() == ['mouton']
+    test_db.save_entry('mouton', 'mutton')
+    test_db.delete_match('mouton', 'lamb')
+    assert test_db.get_index() == ['mutton']
+    assert test_db.get_columns() == ['mouton']
+   
+def test_translation_get_lang1_matches():
+    test_db = translation_test_db()
+    assert test_db.get_lang1_matches('') == []
+    assert test_db.get_lang1_matches('chicken') == []
+    assert test_db.get_lang1_matches('pork') == ['porc']
+    assert test_db.get_lang1_matches('lamb') == ['mouton']
+    test_db.save_entry('agneau', 'lamb')
+    assert test_db.get_lang1_matches('lamb') == ['mouton', 'agneau']
 
-def _test_translation_get_lang1_matches(self, key_lang2):
-    """ Get list of valid translations for language 2 key | str -> list(str) """
-    try:
-        row = self.db.loc[key_lang2.lower(), :]
-        return list(row[row==True].index)
-    except KeyError:
-        try:
-            row = self.db.loc[key_lang2.title(), :]
-            return list(row[row==True].index)
-        except KeyError:
-            return []
+def test_translation_get_lang2_matches():
+    test_db = translation_test_db()
+    assert test_db.get_lang2_matches('') == []
+    assert test_db.get_lang2_matches('poulet') == []
+    assert test_db.get_lang2_matches('porc') == ['pork']
+    assert test_db.get_lang2_matches('mouton') == ['lamb']
+    test_db.save_entry('mouton', 'mutton')
+    assert test_db.get_lang2_matches('mouton') == ['lamb', 'mutton']
 
-def _test_translation_get_lang2_matches(self, key_lang1):
-    """ Get list of valid translations for language 1 key | str -> list(str) """
-    try:
-        index = self.db.loc[self.db[key_lang1.lower()], :].index
-        return list(index.values)
-    except KeyError:
-        try:
-            index = self.db.loc[self.db[key_lang1.title()], :].index
-            return list(index.values)
-        except KeyError:
-            return []
-
-def _test_translation_valid_lang1_keys(self, partial_key):
-    """ Get list of language 1 keys starting with string | str -> list(str) """
-    if partial_key:
-        mask = self.db.columns.str.lower().str.startswith(partial_key.lower())
-        return list(self.db.columns[mask])
-    return []
-
-def _test_translation_valid_lang2_keys(self, partial_key):
-    """ Get list of language 2 keys starting with string | str -> list(str) """
-    if partial_key:
-        mask = self.db.index.str.lower().str.startswith(partial_key.lower())
-        return list(self.db.index[mask])
-    return []
-
+def test_translation_valid_lang1_keys():
+    test_db = translation_test_db()
+    assert test_db.valid_lang1_keys('') == []
+    assert test_db.valid_lang1_keys('pou') == []
+    assert test_db.valid_lang1_keys('porcin') == []
+    assert test_db.valid_lang1_keys('m') == ['mouton']
+    assert test_db.valid_lang1_keys('mout') == ['mouton']
+    assert test_db.valid_lang1_keys('mouton') == ['mouton']
+    assert test_db.valid_lang1_keys('p') == ['porc']
+    assert test_db.valid_lang1_keys('porc') == ['porc']
+    test_db.save_entry('poulet', 'chicken')
+    assert test_db.valid_lang1_keys('p') == ['porc', 'poulet']
+    assert test_db.valid_lang1_keys('po') == ['porc', 'poulet']
+    assert test_db.valid_lang1_keys('por') == ['porc']
+    assert test_db.valid_lang1_keys('pou') == ['poulet']
+    assert test_db.valid_lang1_keys('porc') == ['porc']
+    assert test_db.valid_lang1_keys('poulet') == ['poulet']
+    
+def test_translation_valid_lang2_keys():
+    test_db = translation_test_db()
+    assert test_db.valid_lang2_keys('') == []
+    assert test_db.valid_lang2_keys('pou') == []
+    assert test_db.valid_lang2_keys('lambi') == []
+    assert test_db.valid_lang2_keys('l') == ['lamb']
+    assert test_db.valid_lang2_keys('lam') == ['lamb']
+    assert test_db.valid_lang2_keys('lamb') == ['lamb']
+    assert test_db.valid_lang2_keys('p') == ['pork']
+    assert test_db.valid_lang2_keys('pork') == ['pork']
+    test_db.save_entry('poulet', 'poultry')
+    assert test_db.valid_lang2_keys('p') == ['pork', 'poultry']
+    assert test_db.valid_lang2_keys('po') == ['pork', 'poultry']
+    assert test_db.valid_lang2_keys('por') == ['pork']
+    assert test_db.valid_lang2_keys('pou') == ['poultry']
+    assert test_db.valid_lang2_keys('pork') == ['pork']
+    assert test_db.valid_lang2_keys('poultry') == ['poultry']
+    assert test_db.valid_lang2_keys('porky') == []

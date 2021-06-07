@@ -66,6 +66,12 @@ class Database():
         """ Save contents of database to disk | db.DataFrame -> None """
         self.db.to_pickle(self.get_filepath())
 
+    def get_index(self):
+        return list(self.db.index.values)
+
+    def get_columns(self):
+        return list(self.db.columns.values)
+        
     def initialize_db(self, entry_1, entry_2):
         """ Create new database on first startup | -> pd.DataFrame """
         error_message = 'initialize_db must be overridden by subclass'
@@ -290,10 +296,15 @@ class TranslationDatabase(StandardDatabase):
         Database.__init__(self, name)
 
     def add_column_if_missing(self, key_lang1):
-        """ Initializes column if it doesn't exist | str, pd.DataFrame -> None """
+        """ Initializes column if it doesn't exist | str -> None """
         if not key_lang1 in self.db.columns:
             self.db[key_lang1] = False
 
+    def add_row_if_missing(self, key_lang2):
+        """ Initialize row if it doesn't exist | str -> None """
+        if not key_lang2 in self.db.index:
+            self.db.loc[key_lang2] = False #Initialize row with all False 
+            
     def initialize_db(self, key_lang1, key_lang2):
         """ Create new database on first entry | str, str -> pd.DataFrame """
         print('Initializing database')
@@ -311,8 +322,7 @@ class TranslationDatabase(StandardDatabase):
             self.save_entry(key_lang1, key_lang2)
         else:
             print('Found DataFrame')
-            if not key_lang2 in self.db.index:
-                self.db.loc[key_lang2] = False #Initialize row with all False 
+            self.add_row_if_missing(key_lang2)
             self.add_column_if_missing(key_lang1) #Add missing new key 
             self.db.loc[key_lang2, key_lang1] = True #Set key in key_lang1 to True
             self.save()
@@ -325,37 +335,41 @@ class TranslationDatabase(StandardDatabase):
         self.save()
 
     def get_lang1_keys(self):
-        """ Gets list of keys for language 1 | None -> np.Array """
-        return list(self.db.columns.values)
+        """ Gets list of keys for language 1 | None -> list """
+        return self.get_columns() #alias for get_columns
             
     def get_lang2_keys(self):
-        """ Gets list of keys for language 2 | None -> np.Array """
-        return list(self.db.index.values)
+        """ Gets list of keys for language 2 | None -> list """
+        return self.get_index() #alias for get_index
             
     def get_lang1_matches(self, key_lang2):
         """ Get list of valid translations for language 2 key | str -> list(str) """
         try:
-            row = self.db.loc[key_lang2.lower(), :]
-            return list(row[row==True].index)
+            row = self.db.loc[key_lang2, :]
         except KeyError:
             try:
-                row = self.db.loc[key_lang2.title(), :]
-                return list(row[row==True].index)
+                row = self.db.loc[key_lang2.lower(), :]
             except KeyError:
-                return []
-
+                try:
+                    row = self.db.loc[key_lang2.title(), :]
+                except KeyError:
+                    return []
+        return list(row[row==True].index)
+    
     def get_lang2_matches(self, key_lang1):
         """ Get list of valid translations for language 1 key | str -> list(str) """
         try:
-            index = self.db.loc[self.db[key_lang1.lower()], :].index
-            return list(index.values)
+            index = self.db.loc[self.db[key_lang1], :].index
         except KeyError:
             try:
-                index = self.db.loc[self.db[key_lang1.title()], :].index
-                return list(index.values)
+                index = self.db.loc[self.db[key_lang1.lower()], :].index
             except KeyError:
-                return []
-
+                try:
+                    index = self.db.loc[self.db[key_lang1.title()], :].index
+                except KeyError:
+                    return []
+        return list(index.values)
+    
     def valid_lang1_keys(self, partial_key):
         """ Get list of language 1 keys starting with string | str -> list(str) """
         if partial_key:
