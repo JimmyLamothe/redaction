@@ -38,6 +38,7 @@ def test_get_selection(widget):
     assert widget.get_selection() == 'THIS'
     
 def test_cursor_methods(widget):
+    """ Tests get_cursor, set_cursor and cursor_moved """
     widget.set_contents('Cursor tests')
     assert widget.get_cursor() == '1.12'
     assert widget.cursor_at_end()
@@ -153,6 +154,8 @@ def test_text_changed(suggestion_widget):
     assert widget.text_changed() == False
     widget.set_contents('TextA')
     assert widget.text_changed() == True
+    widget.set_contents('AText')
+    assert widget.text_changed() == True
     
 def test_get_difference(widget, suggestion_widget):
     widget.set_contents('Text')
@@ -218,7 +221,7 @@ def test_update_suggestions(widget):
 
 def test_reset_suggestions(widget):
     widget.suggestion_list = ['sugg1', 'sugg2']
-    widget.suggestion_text = 'sugg'
+    widget.suggestion_text = 'sugg1'
     widget.reset_suggestions()
     assert widget.suggestion_list == []
     assert widget.suggestion_text == ''
@@ -248,12 +251,36 @@ def test_confirm_suggestion(widget, suggestion_widget):
     assert widget.get_cursor() == '1.11' == widget.current_cursor
     assert widget.suggestion_list == ['TextSuggestion']
     assert widget.suggestion_text == 'ion'
-   
+
+def test_type_text(widget):
+    """ PARTIAL - FINISH BEFORE GOING ON """
+    assert widget.get_contents() == ''
+    widget.type_text('a')
+    assert widget.get_contents() == 'a'
+    widget.type_text('b')
+    assert widget.get_contents() == 'ab'
+    widget.type_text('c', 1)
+    assert widget.get_contents() == 'acb'
+    assert widget.get_cursor() == '1.2'
+    widget.type_text('d', 0)
+    assert widget.get_contents() == 'dacb'
+    assert widget.get_cursor() == '1.1'
+    
+class DummyEvent():
+    def __init__(self, key):
+        if type(key) == int: 
+            self.keycode = key
+            self.keysym = None
+        else:
+            self.keycode = None
+            self.keysym = key
+
+def test_autocomplete_delete(widget, suggestion_widget):
+    pass
+
+    
 def _test_autocomplete(self, event):
     """ Autocomplete logic | tk.Event -> None """
-    if event.keysym == 'Tab':
-        self.debug(0)
-        return 'break'
     #If input was a delete command:
     if (event.keysym in self.DELETE_KEYSYMS) or (event.keycode in
                                                  self.DELETE_KEYCODES):
@@ -261,6 +288,7 @@ def _test_autocomplete(self, event):
         self.update_current() #Update current user text
         if self.suggestion_text:
             self.ignore_suggestion() #Delete suggestions and update display
+
         else:
             self.reset_suggestions() #Delete suggestions
         self.debug(1.0)

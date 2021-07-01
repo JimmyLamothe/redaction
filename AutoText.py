@@ -203,53 +203,51 @@ class AutoText(tk.Text):
 
     def autocomplete(self, event):
         """ Autocomplete logic | tk.Event -> None """
-        if event.keysym == 'Tab':
-            #self.debug(0)
-            return 'break'
         #If input was a delete command:
         if (event.keysym in self.DELETE_KEYSYMS) or (event.keycode in
                                                      self.DELETE_KEYCODES):
-            #self.debug(1)
+            self.debug(1)
             self.update_current() #Update current user text
+            self.debug(1.05)
             if self.suggestion_text:
                 self.ignore_suggestion() #Delete suggestions and update display
             else:
                 self.reset_suggestions() #Delete suggestions
-            #self.debug(1.0)
+            self.debug(1.0)
         elif not self.suggestion_text: #If no suggestion displayed
-            #self.debug(2)
+            self.debug(2)
             if self.text_changed(): #If input received
-                #self.debug(2.1)
+                self.debug(2.1)
                 self.update_current()
                 if self.cursor_at_end(): #If cursor at end
-                    #self.debug(2.11)
+                    self.debug(2.11)
                     self.get_suggestion() #Get suggestion
-            #self.debug(2.0)
+            self.debug(2.0)
         elif not self.text_changed(): #If no new input char
-            #self.debug(3)
+            self.debug(3)
             if self.cursor_moved() == 'LEFT': #If cursor moved left
-                #self.debug(3.1)
+                self.debug(3.1)
                 self.ignore_suggestion() #Delete suggestion text
             elif self.cursor_moved() == 'RIGHT': #If cursor moved right
-                #self.debug(3.2)
+                self.debug(3.2)
                 #Confirm suggestion up to cursor position
                 self.confirm_suggestion(cursor=self.get_cursor())
                 self.update_suggestions()
                 self.get_suggestion() #Get next top suggestion from list
             self.update_current()
-            #self.debug(3.0)
+            self.debug(3.0)
         else: #If suggestion active and text changed
-            #self.debug(4)
+            self.debug(4)
             current_input = self.get_difference() #Get new user input
             self.update_current()
             print(f'current_input = {current_input}')
             print(f'len(current_input) = {len(current_input)}')
             if not len(current_input) == 1: #If user input more than one char
-                #self.debug(4.1)
+                self.debug(4.1)
                 self.ignore_suggestion() #Delete suggestion text
             #If input char was next char in suggestion
             elif current_input == self.suggestion_text[0]:
-                #self.debug(4.2)
+                self.debug(4.2)
                 #Confirm suggestion up to cursor
                 self.suggestion_text = self.suggestion_text[1:]
                 self.update_display()
@@ -257,10 +255,10 @@ class AutoText(tk.Text):
                 self.update_suggestions()
                 self.get_suggestion() #Get next top suggestion from list
             else:
-                #self.debug(4.3)
+                self.debug(4.3)
                 self.ignore_suggestion() #Delete suggestion text
                 self.get_suggestion() #Get new suggestions
-            #self.debug(4.0)
+            self.debug(4.0)
 
     def handle_button_release(self, event):
         """ Autocompletion on mouse button release | tk.Event -> None """
@@ -305,3 +303,16 @@ class AutoText(tk.Text):
         print(f'suggestion_list = {self.suggestion_list}')
         if out:
             print(f'Leaving: {name}')
+
+    def type_text(self, string, index=None):
+        """ Simulates typing for tests | str, int -> None """
+        contents = self.get_contents()
+        if index is None:
+            index = len(contents)
+        print(f'index={index}')
+        contents = contents[:index] + string + contents[index:]
+        self.set_contents(contents)
+        self.current_text = contents
+        self.set_cursor(f'1.0+{str(index+1)}c')
+        self.current_cursor = self.get_cursor()
+        self.reset_suggestions()
