@@ -305,14 +305,30 @@ class AutoText(tk.Text):
             print(f'Leaving: {name}')
 
     def type_text(self, string, index=None):
-        """ Simulates typing for tests | str, int -> None """
+        """ Simulates typing for tests | str, opt:int -> None """
         contents = self.get_contents()
         if index is None:
             index = len(contents)
         print(f'index={index}')
         contents = contents[:index] + string + contents[index:]
         self.set_contents(contents)
-        self.current_text = contents
         self.set_cursor(f'1.0+{str(index+1)}c')
         self.current_cursor = self.get_cursor()
-        self.reset_suggestions()
+
+    def backspace_text(self, index=None):
+        """Simulates backspace for tests | str, opt:int -> None """
+        contents = self.get_contents()
+        if index is None:
+            index = len(contents)
+        if index <= 0:
+            return
+        self.set_contents(contents[:index-1] + contents[index:])
+        self.set_cursor(f'1.0+{str(index)}c')
+        self.current_cursor = self.get_cursor()
+
+    def delete_text(self, index=None):
+        """ Simulates delete for tests | str, opt:int -> None """
+        try:
+            self.backspace_text(index +1)
+        except (IndexError, TypeError):
+            return

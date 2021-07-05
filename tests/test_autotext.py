@@ -3,6 +3,7 @@
 Tests not written for all methods. Add more as bugs arise.
 """
 import pytest
+import mock
 import config
 from AutoText import AutoText
 import tkinter as tk
@@ -253,7 +254,6 @@ def test_confirm_suggestion(widget, suggestion_widget):
     assert widget.suggestion_text == 'ion'
 
 def test_type_text(widget):
-    """ PARTIAL - FINISH BEFORE GOING ON """
     assert widget.get_contents() == ''
     widget.type_text('a')
     assert widget.get_contents() == 'a'
@@ -265,7 +265,27 @@ def test_type_text(widget):
     widget.type_text('d', 0)
     assert widget.get_contents() == 'dacb'
     assert widget.get_cursor() == '1.1'
-    
+
+def test_backspace(widget):
+    widget.type_text('abcdefg')
+    assert widget.get_contents() == 'abcdefg'
+    widget.backspace_text()
+    assert widget.get_contents() == 'abcdef'
+    widget.backspace_text(0)
+    assert widget.get_contents() == 'abcdef'
+    widget.backspace_text(1)
+    assert widget.get_contents() == 'bcdef'
+
+def test_delete(widget):
+    widget.type_text('abcdefg')
+    assert widget.get_contents() == 'abcdefg'
+    widget.delete_text()
+    assert widget.get_contents() == 'abcdefg'
+    widget.delete_text(6)
+    assert widget.get_contents() == 'abcdef'
+    widget.delete_text(0)
+    assert widget.get_contents() == 'bcdef'
+        
 class DummyEvent():
     def __init__(self, key):
         if type(key) == int: 
@@ -275,10 +295,83 @@ class DummyEvent():
             self.keycode = None
             self.keysym = key
 
-def test_autocomplete_delete(widget, suggestion_widget):
-    pass
+def test_autocomplete_delete(suggestion_widget):
+    suggestion_widget.delete_text()
+    suggestion_widget.autocomplete(DummyEvent('Delete'))
+    assert suggestion_widget.get_contents() == 'Text'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.current_text == 'Text'
+    assert suggestion_widget.suggestion_list == []
+    suggestion_widget = generate_suggestion_widget()
+    suggestion_widget.delete_text()
+    suggestion_widget.autocomplete(DummyEvent('KP_Delete'))
+    assert suggestion_widget.get_contents() == 'Text'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.current_text == 'Text'
+    assert suggestion_widget.suggestion_list == []
+    suggestion_widget = generate_suggestion_widget()
+    suggestion_widget.backspace_text()
+    suggestion_widget.autocomplete(DummyEvent('BackSpace'))
+    assert suggestion_widget.get_contents() == 'Tex'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.current_text == 'Tex'
+    assert suggestion_widget.suggestion_list == []
+    suggestion_widget = generate_suggestion_widget()
+    suggestion_widget.delete_text()
+    suggestion_widget.autocomplete(DummyEvent(458872))
+    assert suggestion_widget.get_contents() == 'Text'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.current_text == 'Text'
+    assert suggestion_widget.suggestion_list == []
+    suggestion_widget = generate_suggestion_widget()
+    suggestion_widget.backspace_text()
+    suggestion_widget.autocomplete(DummyEvent(458776))
+    assert suggestion_widget.get_contents() == 'Tex'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.current_text == 'Tex'
+    assert suggestion_widget.suggestion_list == []
 
+
+def mock_get_suggestion_no_list(self):
+    if self.suggestion_list:
+        suggestion = self.suggestion_list[0]
+        self.suggestion_text = suggestion[len(self.current_text):]
+    self.update_display()
+
+def mock_get_suggestion_generate_list(self):
+    if not self.suggestion_list:
+        self.suggestion_list = [
+            self.current_text + 'Suggestion1',
+            self.current_text + 'Suggestion2'
+        ]
+    suggestion = self.suggestion_list[0]
+    self.suggestion_text = suggestion[len(self.current_text):]
+    self.update_display()
+        
+def test_autocomplete_no_suggestion(suggestion_widget):
+    with mock.patch.object(AutoText, 'get_suggestion', mock_get_suggestion_no_list):
+        widget = AutoText(tk.Tk())
+        widget.type_text('a')
+        widget.autocomplete(DummyEvent('a'))
+        assert widget.current_text == 'a'
+        assert widget.suggestion_text == ''
+        assert widget.suggestion_list == []
+        assert widget.current_cursor == '1.1'
+    with mock.patch.object(AutoText, 'get_suggestion',
+                           mock_get_suggestion_generate_list):
+        print('Failing test')
+        widget = AutoText(tk.Tk())
+        widget.type_text('a')
+        widget.autocomplete(DummyEvent('a'))
+        assert widget.current_text == 'a'
+        assert widget.suggestion_text == 'Suggestion1'
+        assert widget.suggestion_list == ['aSuggestion1', 'aSuggestion2']
+        assert widget.current_cursor == '1.1'
+        assert widget.get_contents() == 'aSuggestion1'
     
+        
+    
+
 def _test_autocomplete(self, event):
     """ Autocomplete logic | tk.Event -> None """
     #If input was a delete command:
@@ -286,9 +379,9 @@ def _test_autocomplete(self, event):
                                                  self.DELETE_KEYCODES):
         self.debug(1)
         self.update_current() #Update current user text
+        self.debug(1.05)
         if self.suggestion_text:
             self.ignore_suggestion() #Delete suggestions and update display
-
         else:
             self.reset_suggestions() #Delete suggestions
         self.debug(1.0)
