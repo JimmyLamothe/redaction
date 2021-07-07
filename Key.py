@@ -86,7 +86,7 @@ class Key(AutoText):
     
     def get_suggestion(self):
         """ Complete current key input with valid keys from db | None -> None """
-        self.debug('get_suggestion')
+        self.debug('get_suggestion Key')
         partial_key = self.current_text.split()[-1] #Get last partial key
         if self.suggestion_list:
             suggestion_list = self.suggestion_list
@@ -99,7 +99,10 @@ class Key(AutoText):
             print('suggestion', suggestion)
             #Save suggested chars
             self.suggestion_text = suggestion[len(partial_key):]
-            self.suggestion_list = suggestion_list
+            if self.suggestion_text:
+                self.suggestion_list = suggestion_list
+            else:
+                self.suggestion_list = []
             self.update_display()
         self.debug('get_suggestion', out=True)
 

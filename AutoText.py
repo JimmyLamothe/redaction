@@ -276,6 +276,7 @@ class AutoText(tk.Text):
             elif self.cursor_moved() == 'RIGHT': #If cursor moved right
                 #Confirm suggestion up to cursor position
                 self.confirm_suggestion(cursor=self.get_cursor())
+                self.get_suggestion()
 
     def handle_backspace(self, event):
         """ Backspace + modifier deletes previous word | tk.Event -> str """

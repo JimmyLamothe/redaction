@@ -121,7 +121,7 @@ class Phrase(AutoText):
 
     def get_suggestion(self):
         """ Complete current input with valid phrase from db | None -> None """
-        self.debug('get_suggestion')
+        self.debug('get_suggestion Phrase')
         partial_phrase = self.current_text #Get partial phrase
         print(f'partial_phrase: {partial_phrase}, len: {len(partial_phrase)}')
         if self.suggestion_list: #If suggestion list exists, keep it
@@ -135,7 +135,10 @@ class Phrase(AutoText):
             print('suggestion', suggestion)
             #Save suggested chars
             self.suggestion_text = suggestion[len(partial_phrase):]
-            self.suggestion_list = suggestion_list
+            if self.suggestion_text:
+                self.suggestion_list = suggestion_list
+            else:
+                self.suggestion_list = []
             self.update_display()
         self.debug('get_suggestion', out=True)
 
@@ -192,7 +195,7 @@ class Language1(Language):
 
     def get_suggestion(self):
         """ Complete current input with valid key from db | None -> None """
-        self.debug('get_suggestion')
+        self.debug('get_suggestion lang1')
         partial_key = self.current_text #Get partial phrase
         print(f'partial_key: {partial_key}, len: {len(partial_key)}')
         if self.suggestion_list: #If suggestion list exists, keep it
@@ -206,7 +209,10 @@ class Language1(Language):
             print('suggestion', suggestion)
             #Save suggested chars
             self.suggestion_text = suggestion[len(partial_key):]
-            self.suggestion_list = suggestion_list
+            if self.suggestion_text:
+                self.suggestion_list = suggestion_list
+            else:
+                self.suggestion_list = []
             self.update_display()
         self.debug('get_suggestion', out=True)
 
@@ -234,7 +240,7 @@ class Language2(Language):
 
     def get_suggestion(self):
         """ Complete current input with valid key from db | None -> None """
-        self.debug('get_suggestion')
+        self.debug('get_suggestion lang2')
         partial_key = self.current_text #Get partial phrase
         print(f'partial_key: {partial_key}, len: {len(partial_key)}')
         if self.suggestion_list: #If suggestion list exists, keep it
@@ -248,7 +254,10 @@ class Language2(Language):
             print('suggestion', suggestion)
             #Save suggested chars
             self.suggestion_text = suggestion[len(partial_key):]
-            self.suggestion_list = suggestion_list
+            if self.suggestion_text:
+                self.suggestion_list = suggestion_list
+            else:
+                self.suggestion_list = []
             self.update_display()
         self.debug('get_suggestion', out=True)
 

@@ -296,6 +296,7 @@ class DummyEvent():
             self.keysym = key
 
 def test_autocomplete_delete(suggestion_widget):
+    """ Section 1 of autocomplete function """
     suggestion_widget.delete_text()
     suggestion_widget.autocomplete(DummyEvent('Delete'))
     assert suggestion_widget.get_contents() == 'Text'
@@ -330,15 +331,19 @@ def test_autocomplete_delete(suggestion_widget):
     assert suggestion_widget.suggestion_text == ''
     assert suggestion_widget.current_text == 'Tex'
     assert suggestion_widget.suggestion_list == []
-
-
-def mock_get_suggestion_no_list(self):
+    
+def get_suggestion_no_list(self): #will replace AutoText method
     if self.suggestion_list:
         suggestion = self.suggestion_list[0]
         self.suggestion_text = suggestion[len(self.current_text):]
     self.update_display()
 
-def mock_get_suggestion_generate_list(self):
+@pytest.fixture
+def mock_get_suggestion_no_list(monkeypatch):
+    """ Patch get_suggestion as if db had no match | None -> None """
+    monkeypatch.setattr(AutoText, 'get_suggestion', get_suggestion_no_list)
+    
+def get_suggestion_dummy_list(self): #Will replace AutoText method
     if not self.suggestion_list:
         self.suggestion_list = [
             self.current_text + 'Suggestion1',
@@ -347,31 +352,96 @@ def mock_get_suggestion_generate_list(self):
     suggestion = self.suggestion_list[0]
     self.suggestion_text = suggestion[len(self.current_text):]
     self.update_display()
-        
-def test_autocomplete_no_suggestion(suggestion_widget):
-    with mock.patch.object(AutoText, 'get_suggestion', mock_get_suggestion_no_list):
-        widget = AutoText(tk.Tk())
-        widget.type_text('a')
-        widget.autocomplete(DummyEvent('a'))
-        assert widget.current_text == 'a'
-        assert widget.suggestion_text == ''
-        assert widget.suggestion_list == []
-        assert widget.current_cursor == '1.1'
-    with mock.patch.object(AutoText, 'get_suggestion',
-                           mock_get_suggestion_generate_list):
-        print('Failing test')
-        widget = AutoText(tk.Tk())
-        widget.type_text('a')
-        widget.autocomplete(DummyEvent('a'))
-        assert widget.current_text == 'a'
-        assert widget.suggestion_text == 'Suggestion1'
-        assert widget.suggestion_list == ['aSuggestion1', 'aSuggestion2']
-        assert widget.current_cursor == '1.1'
-        assert widget.get_contents() == 'aSuggestion1'
-    
-        
-    
 
+@pytest.fixture
+def mock_get_suggestion_dummy_list(monkeypatch):
+    """ Patch get_suggestion as if db had two matches | None -> None """
+    monkeypatch.setattr(AutoText, 'get_suggestion', get_suggestion_dummy_list)
+
+def test_autocomplete_no_suggestion(widget, mock_get_suggestion_no_list):
+    """ Section 2 of autocomplete with no db matches """
+    widget.type_text('a')
+    widget.autocomplete(DummyEvent('a'))
+    assert widget.current_text == 'a'
+    assert widget.suggestion_text == ''
+    assert widget.suggestion_list == []
+    assert widget.current_cursor == '1.1'
+
+def test_autocomplete_dummy_suggestion(widget, mock_get_suggestion_dummy_list):
+    """ Section 2 of autocomplete with db matches """
+    widget.type_text('a')
+    widget.autocomplete(DummyEvent('a'))
+    assert widget.current_text == 'a'
+    assert widget.suggestion_text == 'Suggestion1'
+    assert widget.suggestion_list == ['aSuggestion1', 'aSuggestion2']
+    assert widget.current_cursor == '1.1'
+    assert widget.get_contents() == 'aSuggestion1'
+
+def test_autocomplete_cursor_moved_left(suggestion_widget):
+    """ Section 3 of autocomplete with cursor moving left """
+    suggestion_widget.set_cursor('1.3')
+    suggestion_widget.autocomplete(DummyEvent(''))
+    assert suggestion_widget.current_text == 'Text'
+    assert suggestion_widget.get_contents() == 'Text'
+    assert suggestion_widget.current_cursor == '1.3'
+    assert suggestion_widget.get_cursor() == '1.3'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.suggestion_list == []
+
+def get_suggestion_single_list(self): #Will replace AutoText method
+    if not self.suggestion_list:
+        self.suggestion_list = ['TextSuggestion']
+    suggestion = self.suggestion_list[0]
+    self.suggestion_text = suggestion[len(self.current_text):]
+    if not self.suggestion_text:
+        self.suggestion_list = []
+    self.update_display()
+
+@pytest.fixture
+def mock_get_suggestion_single_list(monkeypatch):
+    """ Patch get_suggestion as if db had one match | None -> None """
+    monkeypatch.setattr(AutoText, 'get_suggestion', get_suggestion_single_list)
+    
+def test_autocomplete_cursor_moved_right(suggestion_widget,
+                                         mock_get_suggestion_single_list):
+    """ Section 3 of autocomplete with cursor moving right """
+    suggestion_widget.set_cursor('1.5')
+    suggestion_widget.autocomplete(DummyEvent(''))
+    assert suggestion_widget.current_text == 'TextS'
+    assert suggestion_widget.get_contents() == 'TextSuggestion'
+    assert suggestion_widget.current_cursor == '1.5'
+    assert suggestion_widget.get_cursor() == '1.5'
+    assert suggestion_widget.suggestion_text == 'uggestion'
+    assert suggestion_widget.suggestion_list == ['TextSuggestion']
+    suggestion_widget.set_cursor('1.13')
+    suggestion_widget.autocomplete(DummyEvent(''))
+    assert suggestion_widget.current_text == 'TextSuggestio'
+    assert suggestion_widget.get_contents() == 'TextSuggestion'
+    assert suggestion_widget.current_cursor == '1.13'
+    assert suggestion_widget.get_cursor() == '1.13'
+    assert suggestion_widget.suggestion_text == 'n'
+    assert suggestion_widget.suggestion_list == ['TextSuggestion']
+    suggestion_widget.set_cursor('1.14')
+    suggestion_widget.autocomplete(DummyEvent(''))
+    assert suggestion_widget.current_text == 'TextSuggestion'
+    assert suggestion_widget.get_contents() == 'TextSuggestion'
+    assert suggestion_widget.current_cursor == '1.14'
+    assert suggestion_widget.get_cursor() == '1.14'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.suggestion_list == []
+    
+def test_autocomplete_text_changed_sugg_active(suggestion_widget,
+                                               mock_get_suggestion_single_list):
+    """ Section 4.1 of autocomplete """
+    suggestion_widget.type_text('ab') #BUGGED - FIX
+    suggestion_widget.autocomplete(DummyEvent('ab'))
+    assert suggestion_widget.current_text == 'Textab'
+    assert suggestion_widget.get_contents() == 'Textab'
+    assert suggestion_widget.current_cursor == '1.6'
+    assert suggestion_widget.get_cursor() == '1.6'
+    assert suggestion_widget.suggestion_text == ''
+    assert suggestion_widget.suggestion_list == []
+    
 def _test_autocomplete(self, event):
     """ Autocomplete logic | tk.Event -> None """
     #If input was a delete command:
